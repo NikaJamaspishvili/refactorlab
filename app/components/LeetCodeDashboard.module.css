@@ -1,0 +1,195 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #0f1115;
+  color: #e6e6e6;
+}
+
+.header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #2a2e39;
+  font-size: 14px;
+  font-weight: 600;
+  background: #171a21;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  gap: 10px;
+  padding: 10px;
+  flex: 1;
+  min-height: 0;
+}
+
+.panel {
+  border: 1px solid #2a2e39;
+  border-radius: 8px;
+  background: #151922;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.textPanel {
+  overflow: hidden;
+}
+
+.editorPanel {
+  overflow: hidden;
+}
+
+:global(.panelTitle) {
+  padding: 10px 12px;
+  border-bottom: 1px solid #2a2e39;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: #1a1f2a;
+}
+
+:global(.panelShell) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+:global(.panelContent) {
+  padding: 12px;
+  white-space: pre-wrap;
+  line-height: 1.45;
+  overflow: auto;
+  font-size: 13px;
+  color: #cfd3dc;
+}
+
+:global(.panelCode) {
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  white-space: pre-wrap;
+  line-height: 1.45;
+  font-size: 12px;
+  color: #cfd3dc;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+:global(.editorWrap) {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+:global(.statsContent) {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  overflow: auto;
+  color: #cfd3dc;
+}
+
+:global(.statsRow) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+:global(.statsRowActions) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+:global(.statsMetric) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+:global(.statsButton) {
+  background: #232938;
+  border: 1px solid #394156;
+  color: #e6e6e6;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+:global(.statsErrors) {
+  border: 1px solid #394156;
+  background: #10141d;
+  border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+}
+
+:global(.statsFatalTitle) {
+  color: #ff7f7f;
+  font-weight: 700;
+}
+
+:global(.statsFatalList) {
+  border: 1px solid #6a2f2f;
+  background: #1a1111;
+  border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+}
+
+:global(.statsActionButton) {
+  margin-top: auto;
+  align-self: stretch;
+  background: #2c3e64;
+  border: 1px solid #47649b;
+  color: #f0f4ff;
+  border-radius: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+:global(.statsActionButton:disabled) {
+  opacity: 0.7;
+  cursor: default;
+}
+
+:global(.statsDeltaUp) {
+  color: #70e090;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+:global(.statsDeltaDown) {
+  color: #ff8d8d;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+:global(.statsDeltaSame) {
+  color: #aab5cc;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 1000px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
