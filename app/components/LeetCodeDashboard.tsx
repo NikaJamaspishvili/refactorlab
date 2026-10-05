@@ -13,6 +13,12 @@ ${challengeData.about.description}`;
 
 export function LeetCodeDashboard() {
   const [code, setCode] = useState(challengeData.about.code);
+  const [focusedProblem, setFocusedProblem] = useState<{
+    id: string;
+    title: string;
+    message: string;
+    locations: Array<{ line: number; column: number }>;
+  } | null>(null);
 
   return (
     <main className={styles.page}>
@@ -22,10 +28,10 @@ export function LeetCodeDashboard() {
           <TextPanel title="About" content={aboutContent} />
         </div>
         <div className={`${styles.panel} ${styles.editorPanel}`}>
-          <CodeEditorPanel code={code} onCodeChange={setCode} />
+          <CodeEditorPanel code={code} onCodeChange={setCode} focusTarget={focusedProblem} />
         </div>
         <div className={`${styles.panel} ${styles.textPanel}`}>
-          <StatsPanel stats={challengeData.initial_stats} code={code} />
+          <StatsPanel stats={challengeData.initial_stats} code={code} onProblemFocus={setFocusedProblem} />
         </div>
       </section>
     </main>

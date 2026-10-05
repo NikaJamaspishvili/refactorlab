@@ -82,6 +82,41 @@
   overflow: hidden;
 }
 
+:global(.editorProblemLine) {
+  background: rgba(255, 190, 92, 0.2);
+}
+
+:global(.editorProblemGlyph) {
+  background: #ffb545;
+  border-radius: 50%;
+  width: 8px !important;
+  height: 8px !important;
+  margin-left: 4px;
+  margin-top: 6px;
+}
+
+:global(.editorProblemWidget) {
+  max-width: 340px;
+  background: #1a2335;
+  border: 1px solid #4c6ba8;
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+:global(.editorProblemWidgetTitle) {
+  color: #f0f4ff;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+:global(.editorProblemWidgetText) {
+  color: #cfd8ee;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 :global(.statsContent) {
   padding: 12px;
   display: flex;
@@ -121,6 +156,250 @@
   padding: 4px 8px;
   cursor: pointer;
   font-size: 12px;
+}
+
+:global(.statsSectionToggle) {
+  background: #1d2533;
+  border: 1px solid #38435b;
+  color: #e6e6e6;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  text-align: left;
+}
+
+:global(.metricGroupList) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+:global(.metricGroupCard) {
+  border: 1px solid #394156;
+  background: #111726;
+  border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+:global(.metricGroupTitle) {
+  color: #eef3ff;
+  font-weight: 600;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+:global(.metricGroupScore) {
+  color: #9dc7ff;
+  font-size: 11px;
+}
+
+:global(.metricGroupMeta) {
+  color: #9daac5;
+  font-size: 12px;
+}
+
+:global(.metricProblemList) {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+:global(.metricSubGroupWrap) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+:global(.metricSubGroupChip) {
+  border: 1px solid #2f3d5b;
+  background: #101829;
+  color: #9dc7ff;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+:global(.metricSubGroup) {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid #263149;
+  border-radius: 6px;
+  padding: 6px;
+  background: #0c1220;
+}
+
+:global(.metricSubGroupTitle) {
+  color: #9dc7ff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+:global(.metricProblemItem) {
+  border: 1px solid #2e3a52;
+  border-radius: 6px;
+  padding: 8px;
+  background: #0e1420;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+:global(.metricProblemItemClickable) {
+  cursor: pointer;
+}
+
+:global(.metricProblemItemClickable:hover) {
+  border-color: #4c6ba8;
+}
+
+:global(.metricProblemText) {
+  color: #d9e1f2;
+  font-size: 12px;
+  transition: filter 180ms ease;
+}
+
+:global(.metricProblemMeta) {
+  color: #ffcf7f;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+:global(.metricProblemRevealRow) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+:global(.metricProblemHidden) {
+  color: #9fb0cf;
+  font-size: 12px;
+  font-style: italic;
+}
+
+:global(.metricProblemActions) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+:global(.metricProblemNav) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+:global(.metricPageLabel) {
+  color: #9fb0cf;
+  font-size: 11px;
+}
+
+:global(.metricProblemGrid) {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+:global(.metricProblemFooter) {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+:global(.metricProblemLlmButton) {
+  align-self: flex-end;
+  background: #25324d;
+  border: 1px solid #4c6ba8;
+  color: #e8f0ff;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+:global(.metricProblemItemHidden .metricProblemText),
+:global(.metricProblemItemHidden .metricProblemMeta),
+:global(.metricProblemItemHidden .metricProblemFooter),
+:global(.metricProblemItemHidden .metricProblemLlmButton) {
+  filter: blur(4px);
+}
+
+:global(.metricProblemItemRevealed .metricProblemText),
+:global(.metricProblemItemRevealed .metricProblemMeta),
+:global(.metricProblemItemRevealed .metricProblemFooter),
+:global(.metricProblemItemRevealed .metricProblemLlmButton) {
+  filter: blur(0);
+  animation: revealIn 220ms ease;
+}
+
+:global(.metricRevealOverlay) {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(113, 140, 197, 0.45);
+  border-radius: 6px;
+  background: rgba(8, 11, 17, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #edf2ff;
+  cursor: pointer;
+  transition: background 180ms ease;
+}
+
+:global(.metricRevealOverlay:hover) {
+  background: rgba(8, 11, 17, 0.72);
+}
+
+:global(.metricRevealTitle) {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+:global(.metricRevealHint) {
+  font-size: 11px;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+:global(.metricRevealOverlay:hover .metricRevealHint) {
+  opacity: 1;
+}
+
+@keyframes revealIn {
+  from {
+    opacity: 0.75;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+:global(.metricProblemSeverity) {
+  color: #ffcf7f;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+:global(.metricProblemLocation) {
+  color: #8ea0c5;
+  font-size: 11px;
 }
 
 :global(.statsErrors) {
@@ -163,6 +442,24 @@
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
+}
+
+:global(.statsFinalScore) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid #2e3a52;
+  padding-top: 8px;
+  color: #eaf1ff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+:global(.statsFinalScoreMeta) {
+  color: #9fb0cf;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 :global(.statsActionButton:disabled) {

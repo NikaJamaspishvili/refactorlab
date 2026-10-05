@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
-import { STATUS } from "./static";
+import { METRIC, STATUS } from "./static";
 
 export async function withTempCodeFile(code, ext = "js") {
   const tmpDir = path.join(process.cwd(), ".tmp");
@@ -31,6 +31,7 @@ export async function POST(request) {
       ...eslint_res,
       status: STATUS.ACCEPTED,
       duplication: null,
+      duplicationDetails: null,
       text: null,
     };
 
@@ -43,7 +44,26 @@ export async function POST(request) {
 
     // step 2: duplication check
     const duplication = await Duplication(targetFile);
-    if (!isNaN(duplication)) response.duplication = duplication;
+    if (!isNaN(duplication?.score)) {
+      response.duplication = duplication.score;
+      response.duplicationDetails = {
+        score: duplication.score,
+        deductedPoints: duplication.deductedPoints,
+        percentageTokens: duplication.percentageTokens,
+        duplicatedLines: duplication.duplicatedLines,
+        totalLines: duplication.totalLines,
+        clones: duplication.clones,
+      };
+
+      response.maintainability.metricGroups[METRIC.DUPLICATION] = {
+        ...response.maintainability.metricGroups[METRIC.DUPLICATION],
+        score: duplication.score,
+        deductedPoints: duplication.deductedPoints,
+        problems: duplication.problems,
+      };
+    }
+
+    console.log(response.maintainability.metricGroups.complexity.problems);
 
     return Response.json(response);
   } catch (error) {
