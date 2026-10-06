@@ -1,10 +1,10 @@
-import { eslint } from "./eslint";
-import { Duplication } from "./jscpd";
+import { eslint, syntaxCheck } from "./eslint";
 import { fileURLToPath } from "url";
-import fs from "node:fs/promises";
 import path from "node:path";
-import crypto from "node:crypto";
-import { STATUS } from "./static";
+import fs from "node:fs/promises";
+import { RunTests } from "./runtests";
+import EXERCISES from "../../../BAD_CODE/exercises.json";
+import { getOutputAffectingLines } from "../tools/output_affecting_lines";
 
 export async function withTempCodeFile(code, ext = "js") {
   const tmpDir = path.join(process.cwd(), ".tmp");
@@ -16,36 +16,59 @@ export async function withTempCodeFile(code, ext = "js") {
 }
 
 export async function POST(request) {
-  const { code } = await request.json();
+  const { code, exerciseId } = await request.json();
+
+  const exerciseContext = EXERCISES[exerciseId];
   const tmpFilePath = await withTempCodeFile(code);
 
   try {
+    const response = await syntaxCheck(tmpFilePath);
+
+    if (!response.ok)
+      return Response.json(
+        { status: "FATAL_MESSAGE", fatalMessages: response.fatalMessages },
+        { status: 400 },
+      );
+
+    // step 1: run tests, ensure code behaviour works correctly.
+    const testsResult = await RunTests(
+      exerciseContext.tests,
+      exerciseContext.mainFunctionName,
+      code,
+    );
+
+    if (!testsResult.ok) {
+      const affectedLines = getOutputAffectingLines(
+        tmpFilePath,
+        exerciseContext.mainFunctionName,
+      );
+      return Response.json(
+        {
+          status: "TESTS_FAILED",
+          testsResult,
+          affectedLines: affectedLines.map((item) => {
+            return { startLine: item.startLine, endLine: item.endLine };
+          }),
+        },
+        { status: 400 },
+      );
+    }
+
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
 
     const targetFile = path.resolve(__dirname, tmpFilePath);
-    // step 1: cognitive complexity & syntax errors
+    // step 2: structural code evaluation
     const eslint_res = await eslint(targetFile);
 
-    let response = {
-      ...eslint_res,
-      status: STATUS.ACCEPTED,
-      duplication: null,
-      text: null,
-    };
+    // if (eslint_res[0]?.fatal) {
+    //   return Response.json(
+    //     { status: "FATAL_MESSAGE", ...eslint_res },
+    //     { status: 400 },
+    //   );
+    // }
 
-    if (eslint_res.fatal.length > 0) {
-      response.status = STATUS.REJECTED;
-      response.text = "Fatal error";
-
-      return Response.json(response);
-    }
-
-    // step 2: duplication check
-    const duplication = await Duplication(targetFile);
-    if (!isNaN(duplication)) response.duplication = duplication;
-
-    return Response.json(response);
+    return Response.json(eslint_res, { status: 200 });
   } catch (error) {
     throw new Error(error);
   } finally {

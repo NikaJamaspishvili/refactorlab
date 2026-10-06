@@ -1,31 +1,47 @@
-'use client';
+"use client";
 
 import { useState } from "react";
-import challengeData from "../../BAD_CODE/calculateCheckout/calculateCheckout.json";
+import Exercises from "../../BAD_CODE/exercises.json";
 import { CodeEditorPanel } from "./CodeEditorPanel";
 import { StatsPanel } from "./StatsPanel";
-import { TextPanel } from "./TextPanel";
 import styles from "./LeetCodeDashboard.module.css";
 
-const aboutContent = `${challengeData.about.title}
+type HighlightPosition = {
+  line: number;
+  column: number;
+  endline?: number;
+  endColumn?: number;
+};
 
-${challengeData.about.description}`;
+type LlmHint = {
+  startline: number;
+  endline: number;
+  hint_content: string;
+  solution: string;
+  correct_code: string;
+};
 
 export function LeetCodeDashboard() {
-  const [code, setCode] = useState(challengeData.about.code);
+  const [code, setCode] = useState(Exercises["2"].code);
+  const [highlightedPositions, setHighlightedPositions] = useState<
+    HighlightPosition[]
+  >([]);
+  const [activeHint, setActiveHint] = useState<LlmHint | null>(null);
 
   return (
     <main className={styles.page}>
       <header className={styles.header}>LeetCode-Style Dashboard</header>
       <section className={styles.grid}>
-        <div className={`${styles.panel} ${styles.textPanel}`}>
-          <TextPanel title="About" content={aboutContent} />
-        </div>
         <div className={`${styles.panel} ${styles.editorPanel}`}>
-          <CodeEditorPanel code={code} onCodeChange={setCode} />
+          <CodeEditorPanel
+            code={code}
+            onCodeChange={setCode}
+            highlightedPositions={highlightedPositions}
+            activeHint={activeHint}
+          />
         </div>
         <div className={`${styles.panel} ${styles.textPanel}`}>
-          <StatsPanel stats={challengeData.initial_stats} code={code} />
+          <StatsPanel code={code} onRuleClick={setHighlightedPositions} />
         </div>
       </section>
     </main>

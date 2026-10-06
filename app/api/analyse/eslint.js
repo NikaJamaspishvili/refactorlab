@@ -1,5 +1,7 @@
 import { ESLint } from "eslint";
 import sonarjs from "eslint-plugin-sonarjs";
+import { sonarRuleDictionary } from "./static";
+import { getContext } from "./context_parse";
 
 export async function eslint(filepath) {
   function extractCognitiveComplexity(message) {
@@ -8,23 +10,12 @@ export async function eslint(filepath) {
     );
     if (!complexityMatch) return null;
 
-    return {
-      line: message.line,
-      column: message.column,
-      score: Number(complexityMatch[1]),
-    };
+    return Number(complexityMatch[1]);
   }
 
-  function normalizeMessage(m) {
-    return {
-      ruleId: m.ruleId ?? null,
-      severity: m.severity ?? null, // 1 warn, 2 error
-      fatal: Boolean(m.fatal),
-      text: m.message ?? "",
-      line: m.line ?? null,
-      column: m.column ?? null,
-    };
-  }
+  const allSonarRulesAsError = Object.fromEntries(
+    Object.keys(sonarRuleDictionary).map((name) => [`${name}`, "error"]),
+  );
 
   const eslint = new ESLint({
     overrideConfigFile: true,
@@ -32,8 +23,7 @@ export async function eslint(filepath) {
       {
         ...sonarjs.configs.recommended,
         rules: {
-          ...sonarjs.configs.recommended.rules,
-          "sonarjs/cognitive-complexity": ["error", 0],
+          ...allSonarRulesAsError,
         },
       },
     ],
@@ -41,52 +31,87 @@ export async function eslint(filepath) {
 
   const [result] = await eslint.lintFiles([filepath]);
 
-  let response = {
-    errors: [],
-    warnings: [],
-    fatal: [],
-    function_complexities: {
-      all: [],
-      avg: 0,
-    },
-    maintainabilityIssues: 0,
-  };
+  let object = {};
 
-  result.messages.map((message) => {
-    const normalisedMessage = normalizeMessage(message);
-    const complexity = extractCognitiveComplexity(message);
-    if (message.ruleId?.startsWith("sonarjs")) {
-      if (complexity) {
-        response.function_complexities.all.push(complexity);
-        response.function_complexities.avg += complexity.score;
-      } else {
-        response.maintainabilityIssues += 1;
-      }
+  // const fatalIssue = result.messages.filter((item) => item.fatal);
+  // if (fatalIssue.length > 0) return fatalIssue;
+
+  result.messages.forEach((message) => {
+    let score = 3;
+
+    if (message.ruleId === "sonarjs/cognitive-complexity") {
+      score = extractCognitiveComplexity(message);
     }
 
-    if (message.fatal) {
-      response.fatal.push(normalisedMessage);
-    }
+    if (!sonarRuleDictionary[message.ruleId]) return;
 
-    if (
-      !message.fatal &&
-      message.severity === 2 &&
-      message.ruleId !== "sonarjs/cognitive-complexity"
-    ) {
-      response.errors.push(normalisedMessage);
-    }
+    const node = getContext(
+      filepath,
+      message.line,
+      message.column,
+      sonarRuleDictionary[message.ruleId].context,
+    );
 
-    if (message.severity === 1) {
-      response.warnings.push(normalisedMessage);
+    // console.log(
+    //   node,
+    //   message.line,
+    //   message.column,
+    //   message.message,
+    //   sonarRuleDictionary[message.ruleId].context,
+    // );
+
+    if (object[message.ruleId]) {
+      object[message.ruleId].positions.push({
+        line: node.startLine,
+        column: 0,
+        endline: node.endLine,
+        endColumn: 0,
+      });
+      object[message.ruleId].score += score;
+    } else {
+      object[message.ruleId] = {
+        severity: message.severity,
+        positions: [
+          {
+            line: node.startLine,
+            column: 0,
+            endline: node.endLine,
+            endColumn: 0,
+          },
+        ],
+        hint_1: sonarRuleDictionary[message.ruleId].hint_1,
+        score: score,
+        category: sonarRuleDictionary[message.ruleId].group,
+        title: sonarRuleDictionary[message.ruleId].title,
+        description: sonarRuleDictionary[message.ruleId].description,
+        message: message.message,
+      };
     }
   });
 
-  response.function_complexities.avg =
-    100 -
-    Math.round(
-      response.function_complexities.avg /
-        response.function_complexities.all.length,
-    );
+  return object;
+}
 
-  return response;
+export async function syntaxCheck(tmpFilePath) {
+  const checker = new ESLint({
+    overrideConfigFile: true,
+    overrideConfig: [
+      {
+        languageOptions: {
+          ecmaVersion: "latest",
+          sourceType: "module",
+        },
+        rules: {}, // important: no lint rules, only parser/syntax validation
+      },
+    ],
+    ignore: false,
+  });
+
+  const [result] = await checker.lintFiles([tmpFilePath]);
+
+  const fatalMessages = result.messages.filter((m) => m.fatal);
+  return {
+    ok: fatalMessages.length === 0,
+    fatalMessages,
+  };
 }

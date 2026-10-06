@@ -16,7 +16,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: 1fr 1.4fr 1fr;
+  grid-template-columns: minmax(0, 1.8fr) minmax(320px, 1fr);
   gap: 10px;
   padding: 10px;
   flex: 1;
@@ -73,13 +73,72 @@
   line-height: 1.45;
   font-size: 12px;
   color: #cfd3dc;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
 }
 
 :global(.editorWrap) {
+  position: relative;
   flex: 1;
   min-height: 0;
   overflow: hidden;
+}
+
+:global(.editorHintCard) {
+  position: absolute;
+  right: 12px;
+  z-index: 20;
+  width: min(360px, calc(100% - 24px));
+  border: 1px solid #486198;
+  border-radius: 10px;
+  background: rgba(10, 14, 24, 0.96);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+:global(.editorHintTitle) {
+  color: #9bc4ff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+:global(.editorHintText) {
+  color: #e4e8f4;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+:global(.editorHintSolution) {
+  border-top: 1px solid #2d3a57;
+  padding-top: 8px;
+  color: #c8d4f2;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+:global(.editorHintActions) {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+:global(.editorHintButton) {
+  background: #232f49;
+  border: 1px solid #3f588c;
+  color: #edf3ff;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+:global(.editorHintButton:hover) {
+  background: #2d3d5f;
 }
 
 :global(.statsContent) {
@@ -131,7 +190,9 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
   font-size: 12px;
 }
 
@@ -148,8 +209,40 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
   font-size: 12px;
+}
+
+:global(.statsTestsFailedWrapper) {
+  border: 1px solid #2f3a52;
+  border-radius: 10px;
+  background: #f7f9fc;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+:global(.statsTestsFailedHeader) {
+  border: 1px solid #d8deea;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2b45;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+:global(.statsTestsFailedBody) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 :global(.statsActionButton) {
@@ -168,6 +261,306 @@
 :global(.statsActionButton:disabled) {
   opacity: 0.7;
   cursor: default;
+}
+
+:global(.statsGroupedIssues) {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+:global(.statsCategoryCard) {
+  border: 1px solid #2c364b;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #121826 0%, #0f1522 100%);
+  overflow: hidden;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+:global(.statsCategoryCard:hover) {
+  transform: translateY(-1px);
+  border-color: #4f6185;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.22);
+}
+
+:global(.statsCategoryHeader) {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.02);
+  color: #e6e6e6;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  transition: background 160ms ease;
+}
+
+:global(.statsCategoryHeader:hover) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:global(.statsCategoryName) {
+  color: #f0f4ff;
+}
+
+:global(.statsCategoryHeaderRight) {
+  color: #aab5cc;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+:global(.statsCategoryScore) {
+  color: #8ec6ff;
+  font-weight: 700;
+}
+
+:global(.statsCategoryPenalty) {
+  font-size: 12px;
+  color: #f6b2b2;
+}
+
+:global(.statsCategoryArrow) {
+  display: inline-block;
+  transition: transform 180ms ease;
+}
+
+:global(.statsCategoryArrowOpen) {
+  transform: rotate(180deg);
+}
+
+:global(.statsCategoryBody) {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 220ms ease;
+}
+
+:global(.statsCategoryBodyOpen) {
+  grid-template-rows: 1fr;
+}
+
+:global(.statsCategoryIssues) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
+:global(.statsIssueCard) {
+  border: 1px solid #2f3a52;
+  border-radius: 8px;
+  background: #0f1522;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: statsFadeUp 220ms ease;
+}
+
+:global(.statsIssueCardClickable) {
+  cursor: pointer;
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+:global(.statsIssueCardClickable:hover) {
+  transform: translateY(-1px);
+  border-color: #5c74a1;
+  background: #111a2b;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+:global(.statsIssueCardActive) {
+  border-color: #79a8ff;
+  background: #15213a;
+  box-shadow: 0 0 0 1px rgba(121, 168, 255, 0.25);
+}
+
+:global(.statsCategoryBodyInner) {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+:global(.statsCategoryMeta) {
+  color: #90a0c2;
+  font-size: 11px;
+  padding-top: 2px;
+}
+
+:global(.statsIssueTitle) {
+  color: #f0f4ff;
+  font-weight: 600;
+}
+
+:global(.statsIssueDescription) {
+  color: #cfd3dc;
+  font-size: 12px;
+}
+
+:global(.statsIssueAction) {
+  color: #e8d8b8;
+  font-size: 12px;
+}
+
+:global(.statsIssueMeta) {
+  color: #9dabca;
+  font-size: 11px;
+}
+
+:global(.statsIssueButtons) {
+  display: flex;
+  gap: 8px;
+}
+
+:global(.statsFinalScoreCard) {
+  border: 1px solid #36517f;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #16233d 0%, #101a2d 100%);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+:global(.statsFinalScoreLabel) {
+  color: #c8d7f5;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+:global(.statsFinalScoreRight) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+:global(.statsFinalScoreValue) {
+  color: #f2f6ff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+:global(.statsFinalScoreDelta) {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+:global(.statsFinalScoreDeltaup) {
+  color: #7ff5ad;
+}
+
+:global(.statsFinalScoreDeltadown) {
+  color: #ff9898;
+}
+
+:global(.statsFinalScoreDeltasame) {
+  color: #b8c2d8;
+}
+
+:global(.statsSubmitFeedback) {
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid;
+  animation: statsPopupIn 260ms ease;
+}
+
+:global(.statsSubmitFeedbackup) {
+  background: linear-gradient(180deg, #153928 0%, #102b1f 100%);
+  border-color: #2d7f58;
+}
+
+:global(.statsSubmitFeedbackdown) {
+  background: linear-gradient(180deg, #3d1b1b 0%, #2b1313 100%);
+  border-color: #8a3838;
+}
+
+:global(.statsSubmitFeedbacksame) {
+  background: linear-gradient(180deg, #2b2f37 0%, #232730 100%);
+  border-color: #565f71;
+}
+
+:global(.statsSubmitFeedbackTitle) {
+  color: #f4f7ff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+:global(.statsSubmitFeedbackSubtitle) {
+  margin-top: 2px;
+  color: #d1d8e8;
+  font-size: 12px;
+}
+
+:global(.statsSubmitFeedbackButton) {
+  margin-top: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f0f4ff;
+  font-size: 12px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+:global(.statsEmptyState) {
+  border: 1px dashed #3a4868;
+  background: #101726;
+  color: #b6c1dc;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 12px;
+}
+
+:global(.editorHighlightRange) {
+  background: rgba(255, 206, 84, 0.25);
+  border-bottom: 1px solid rgba(255, 206, 84, 0.65);
+  border-radius: 2px;
+}
+
+:global(.editorHighlightLine) {
+  border-left: 3px solid #ffce54;
+  margin-left: 4px;
+}
+
+@keyframes statsFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes statsPopupIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 :global(.statsDeltaUp) {

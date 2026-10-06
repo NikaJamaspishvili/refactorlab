@@ -1,0 +1,35 @@
+{
+  "2": {
+    "code": "function calculateShipping(order, customer) {\n  let shipping = 10;\n\n  if (order) {\n    if (order.total > 0) {\n      if (customer) {\n        if (customer.type === \"premium\") {\n          shipping = 5;\n        }\n      }\n    }\n  }\n\n  if (order.total > 100 && order.total > 100) {\n    shipping = 0;\n  }\n\n  if (order.country === \"GE\") {\n    shipping = shipping + 2;\n  } else if (order.country === \"GE\") {\n    shipping = shipping + 2;\n  }\n\n  const isFreeShipping = shipping === 0 ? true : false;\n\n  if (isFreeShipping === true) {\n    console.log(\"free shipping\");\n  }\n\n  if (order.total > 50) {\n    if (order.total > 100) {\n      console.log(\"large order\");\n    }\n  }\n\n  return shipping;\n}",
+    "title": "Overly Complex calculateShipping with Redundant Checks",
+    "description": "This function calculates a shipping fee but contains unnecessary nesting, duplicated conditions, repeated country checks, redundant boolean expressions, and nested threshold logic. The goal is to refactor the function while preserving its current behavior.",
+    "mainFunctionName": "calculateShipping",
+    "tests": [
+      {
+        "name": "regular customer",
+        "input": [{ "total": 40, "country": "US" }, { "type": "regular" }],
+        "expected": 10
+      },
+      {
+        "name": "premium customer",
+        "input": [{ "total": 40, "country": "US" }, { "type": "premium" }],
+        "expected": 5
+      },
+      {
+        "name": "premium customer in GE",
+        "input": [{ "total": 40, "country": "GE" }, { "type": "premium" }],
+        "expected": 7
+      },
+      {
+        "name": "large order gets free shipping",
+        "input": [{ "total": 150, "country": "US" }, { "type": "regular" }],
+        "expected": 0
+      },
+      {
+        "name": "large GE order",
+        "input": [{ "total": 150, "country": "GE" }, { "type": "premium" }],
+        "expected": 2
+      }
+    ]
+  }
+}
