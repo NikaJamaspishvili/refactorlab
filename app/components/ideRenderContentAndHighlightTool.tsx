@@ -35,7 +35,11 @@ export function createIdeRenderContentAndHighlightTool(
   let widgetRoot: Root | null = null;
   let widgetDomNode: HTMLDivElement | null = null;
   let widgetId: string | null = null;
-  let widgetRange: { line: number; column: number } | null = null;
+  let widgetRange: {
+    line: number;
+    startColumn: number;
+    endColumn: number;
+  } | null = null;
   let widgetPlacement: CardPlacement = "above";
   let widgetMaxBodyHeight: number | undefined;
   let widgetContent = "";
@@ -88,16 +92,8 @@ export function createIdeRenderContentAndHighlightTool(
       return;
     }
 
-    const lineHeight = editor.getOption(monaco.editor.EditorOption.lineHeight);
-    const pixelGap = lineHeight * cardGapInLines;
-
-    if (widgetPlacement === "above") {
-      widgetDomNode.style.marginBottom = `${pixelGap}px`;
-      widgetDomNode.style.marginTop = "0px";
-    } else {
-      widgetDomNode.style.marginTop = `${pixelGap}px`;
-      widgetDomNode.style.marginBottom = "0px";
-    }
+    widgetDomNode.style.marginTop = "0px";
+    widgetDomNode.style.marginBottom = "0px";
   };
 
   const selectPlacement = (targetLine: number): FitResult => {
@@ -170,8 +166,17 @@ export function createIdeRenderContentAndHighlightTool(
 
         return {
           position: {
-            lineNumber: widgetRange.line,
-            column: widgetRange.column,
+            lineNumber:
+              widgetPlacement === "above"
+                ? Math.max(1, widgetRange.line - cardGapInLines)
+                : Math.min(
+                    editor.getModel()?.getLineCount() ?? widgetRange.line,
+                    widgetRange.line + cardGapInLines,
+                  ),
+            column:
+              widgetPlacement === "above"
+                ? widgetRange.startColumn
+                : widgetRange.endColumn,
           },
           preference:
             widgetPlacement === "above"
@@ -278,7 +283,8 @@ export function createIdeRenderContentAndHighlightTool(
 
     widgetRange = {
       line: normalizedStartLine,
-      column: normalizedStartColumn,
+      startColumn: normalizedStartColumn,
+      endColumn: normalizedEndColumn,
     };
 
     editor.addContentWidget(buildContentWidget());
