@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Exercises from "../../BAD_CODE/exercises.json";
+import Exercises from "@/exercises.json";
 import { CodeEditorPanel } from "./CodeEditorPanel";
 import { StatsPanel } from "./StatsPanel";
 import styles from "./LeetCodeDashboard.module.css";
@@ -21,12 +21,19 @@ type LlmHint = {
   correct_code: string;
 };
 
+type LlmPointerCardPayload = {
+  startLine: number;
+  endLine: number;
+  content: string;
+};
+
 export function LeetCodeDashboard() {
   const [code, setCode] = useState(Exercises["2"].code);
   const [highlightedPositions, setHighlightedPositions] = useState<
     HighlightPosition[]
   >([]);
   const [activeHint, setActiveHint] = useState<LlmHint | null>(null);
+  const [llmPointerCards, setLlmPointerCards] = useState<LlmPointerCardPayload[]>([]);
 
   return (
     <main className={styles.page}>
@@ -38,10 +45,15 @@ export function LeetCodeDashboard() {
             onCodeChange={setCode}
             highlightedPositions={highlightedPositions}
             activeHint={activeHint}
+            llmPointerCards={llmPointerCards}
           />
         </div>
         <div className={`${styles.panel} ${styles.textPanel}`}>
-          <StatsPanel code={code} onRuleClick={setHighlightedPositions} />
+          <StatsPanel
+            code={code}
+            onRuleClick={setHighlightedPositions}
+            onLlmCodeBlocksFocus={setLlmPointerCards}
+          />
         </div>
       </section>
     </main>

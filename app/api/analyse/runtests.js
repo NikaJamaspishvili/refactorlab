@@ -10,8 +10,6 @@ function runUserFunction(code, functionName, args) {
     ${functionName}(...__ARGS__);
   `;
 
-  // console.log(wrapped);
-
   const script = new vm.Script(wrapped);
   context.__ARGS__ = args;
   return script.runInContext(context, { timeout: 300 }); // ms

@@ -52,14 +52,6 @@ export async function eslint(filepath) {
       sonarRuleDictionary[message.ruleId].context,
     );
 
-    // console.log(
-    //   node,
-    //   message.line,
-    //   message.column,
-    //   message.message,
-    //   sonarRuleDictionary[message.ruleId].context,
-    // );
-
     if (object[message.ruleId]) {
       object[message.ruleId].positions.push({
         line: node.startLine,

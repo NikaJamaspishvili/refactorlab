@@ -22,6 +22,5 @@ export async function Duplication(filePath) {
   const report = JSON.parse(raw);
 
   await rm(TEMP_JSCPD_FILEPATH, { force: true });
-  console.log(report);
   return Math.round(100 - report.statistics.total.percentageTokens);
 }

@@ -1,19 +1,11 @@
 import { eslint, syntaxCheck } from "./eslint";
 import { fileURLToPath } from "url";
+import { withTempCodeFile } from "../tools/fs";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { RunTests } from "./runtests";
-import EXERCISES from "../../../BAD_CODE/exercises.json";
+import EXERCISES from "@/exercises.json";
 import { getOutputAffectingLines } from "../tools/output_affecting_lines";
-
-export async function withTempCodeFile(code, ext = "js") {
-  const tmpDir = path.join(process.cwd(), ".tmp");
-  await fs.mkdir(tmpDir, { recursive: true });
-
-  const file = path.join(tmpDir, `snippet-${crypto.randomUUID()}.${ext}`);
-  await fs.writeFile(file, code, "utf8");
-  return file;
-}
 
 export async function POST(request) {
   const { code, exerciseId } = await request.json();
@@ -46,9 +38,7 @@ export async function POST(request) {
         {
           status: "TESTS_FAILED",
           testsResult,
-          affectedLines: affectedLines.map((item) => {
-            return { startLine: item.startLine, endLine: item.endLine };
-          }),
+          affectedLines: affectedLines,
         },
         { status: 400 },
       );
@@ -60,13 +50,6 @@ export async function POST(request) {
     const targetFile = path.resolve(__dirname, tmpFilePath);
     // step 2: structural code evaluation
     const eslint_res = await eslint(targetFile);
-
-    // if (eslint_res[0]?.fatal) {
-    //   return Response.json(
-    //     { status: "FATAL_MESSAGE", ...eslint_res },
-    //     { status: 400 },
-    //   );
-    // }
 
     return Response.json(eslint_res, { status: 200 });
   } catch (error) {

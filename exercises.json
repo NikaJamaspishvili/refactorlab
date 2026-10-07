@@ -30,6 +30,7 @@
         "input": [{ "total": 150, "country": "GE" }, { "type": "premium" }],
         "expected": 2
       }
-    ]
+    ],
+    "HotLines": "startLine,endLine,content\n\"2\",\"2\",\"let shipping = 10;\"\n\"4\",\"12\",\"if (order) {\n    if (order.total > 0) {\n      if (customer) {\n        if (customer.type === \"\"premium\"\") {\n          shipping = 5;\n        }\n      }\n    }\n  }\"\n\"14\",\"16\",\"if (order.total > 100 && order.total > 100) {\n    shipping = 0;\n  }\"\n\"18\",\"22\",\"if (order.country === \"\"GE\"\") {\n    shipping = shipping + 2;\n  } else if (order.country === \"\"GE\"\") {\n    shipping = shipping + 2;\n  }\"\n\"36\",\"36\",\"return shipping;\""
   }
 }

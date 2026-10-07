@@ -2,12 +2,19 @@
 
 import Editor, { DiffEditor, type OnMount } from "@monaco-editor/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createIdeRenderContentAndHighlightTool } from "./ideRenderContentAndHighlightTool";
 
 type HighlightPosition = {
   line: number;
   column: number;
   endline?: number;
   endColumn?: number;
+};
+
+type LlmPointerCardPayload = {
+  startLine: number;
+  endLine: number;
+  content: string;
 };
 
 type CodeEditorPanelProps = {
@@ -21,6 +28,7 @@ type CodeEditorPanelProps = {
     solution: string;
     correct_code: string;
   } | null;
+  llmPointerCards: LlmPointerCardPayload[];
 };
 
 function replaceLinesInCode(
@@ -47,13 +55,18 @@ export function CodeEditorPanel({
   onCodeChange,
   highlightedPositions,
   activeHint,
+  llmPointerCards,
 }: CodeEditorPanelProps) {
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
   const decorationsRef = useRef<string[]>([]);
+  const renderToolRef = useRef<ReturnType<
+    typeof createIdeRenderContentAndHighlightTool
+  > | null>(null);
   const [showSolution, setShowSolution] = useState(false);
   const [showDiff, setShowDiff] = useState(false);
   const [hintTop, setHintTop] = useState(16);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
 
   const highlightedLine =
     highlightedPositions[0]?.line ?? activeHint?.startline;
@@ -111,6 +124,74 @@ export function CodeEditorPanel({
   }, [highlightedPositions]);
 
   useEffect(() => {
+    setActiveCardIndex(0);
+  }, [llmPointerCards]);
+
+  useEffect(() => {
+    if (llmPointerCards.length === 0) {
+      return;
+    }
+
+    setActiveCardIndex((previous) => {
+      return Math.min(previous, llmPointerCards.length - 1);
+    });
+  }, [llmPointerCards.length]);
+
+  useEffect(() => {
+    const renderTool = renderToolRef.current;
+
+    if (!renderTool) {
+      return;
+    }
+
+    if (llmPointerCards.length === 0) {
+      renderTool.clear();
+      return;
+    }
+
+    const activeCard = llmPointerCards[activeCardIndex];
+    if (!activeCard) {
+      return;
+    }
+
+    renderTool.render({
+      startLine: activeCard.startLine,
+      endLine: activeCard.endLine,
+      content: activeCard.content,
+      footer: (
+        <>
+          <button
+            type="button"
+            disabled={activeCardIndex === 0}
+            onClick={() =>
+              setActiveCardIndex((previous) => Math.max(0, previous - 1))
+            }
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            disabled={activeCardIndex >= llmPointerCards.length - 1}
+            onClick={() =>
+              setActiveCardIndex((previous) =>
+                Math.min(llmPointerCards.length - 1, previous + 1),
+              )
+            }
+          >
+            Next
+          </button>
+        </>
+      ),
+    });
+  }, [activeCardIndex, llmPointerCards]);
+
+  useEffect(() => {
+    return () => {
+      renderToolRef.current?.dispose();
+    };
+  }, []);
+
+  useEffect(() => {
     const editor = editorRef.current;
     if (!editor || !highlightedLine) {
       return;
@@ -150,6 +231,8 @@ export function CodeEditorPanel({
               wordWrap: "on",
               scrollBeyondLastLine: false,
               automaticLayout: true,
+              allowOverflow: true,
+              fixedOverflowWidgets: true,
             }}
           />
         ) : (
@@ -161,6 +244,10 @@ export function CodeEditorPanel({
             onMount={(editor, monaco) => {
               editorRef.current = editor;
               monacoRef.current = monaco;
+              renderToolRef.current = createIdeRenderContentAndHighlightTool(
+                editor,
+                monaco,
+              );
             }}
             theme="vs-dark"
             options={{
@@ -170,6 +257,8 @@ export function CodeEditorPanel({
               lineNumbers: "on",
               scrollBeyondLastLine: false,
               automaticLayout: true,
+              allowOverflow: true,
+              fixedOverflowWidgets: true,
             }}
           />
         )}
