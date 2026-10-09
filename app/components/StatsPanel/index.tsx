@@ -27,11 +27,13 @@ import type {
 type StatsPanelProps = {
   code: string;
   onRuleClick: (positions: SonarIssuePosition[]) => void;
-  onLlmCodeBlocksFocus: (payload: Array<{
-    startLine: number;
-    endLine: number;
-    content: string;
-  }>) => void;
+  onLlmCodeBlocksFocus: (
+    payload: Array<{
+      startLine: number;
+      endLine: number;
+      content: string;
+    }>,
+  ) => void;
 };
 
 export function StatsPanel({
@@ -40,25 +42,43 @@ export function StatsPanel({
   onLlmCodeBlocksFocus,
 }: StatsPanelProps) {
   const [isChecking, setIsChecking] = useState(false);
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [expandedCategories, setExpandedCategories] = useState<
+    Record<string, boolean>
+  >({});
   const [analysedIssues, setAnalysedIssues] = useState<SonarIssuesResponse>({});
   const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
-  const [baselineFinalScore, setBaselineFinalScore] = useState<number | null>(null);
-  const [baselineCategoryScores, setBaselineCategoryScores] = useState<Record<string, number> | null>(
+  const [baselineFinalScore, setBaselineFinalScore] = useState<number | null>(
     null,
   );
-  const [previousFinalScore, setPreviousFinalScore] = useState<number | null>(null);
-  const [submitFeedback, setSubmitFeedback] = useState<SubmitFeedback | null>(null);
-  const [revealedHints, setRevealedHints] = useState<Record<string, boolean>>({});
+  const [baselineCategoryScores, setBaselineCategoryScores] = useState<Record<
+    string,
+    number
+  > | null>(null);
+  const [previousFinalScore, setPreviousFinalScore] = useState<number | null>(
+    null,
+  );
+  const [submitFeedback, setSubmitFeedback] = useState<SubmitFeedback | null>(
+    null,
+  );
+  const [revealedHints, setRevealedHints] = useState<Record<string, boolean>>(
+    {},
+  );
   const [fatalMessage, setFatalMessage] = useState("");
-  const [testsFailedPayload, setTestsFailedPayload] = useState<ParsedTestsFailedPayload | null>(
-    null,
-  );
+  const [testsFailedPayload, setTestsFailedPayload] =
+    useState<ParsedTestsFailedPayload | null>(null);
   const [isFailedTestsOpen, setIsFailedTestsOpen] = useState(false);
 
-  const groupedIssues = useMemo(() => buildGroupedIssues(analysedIssues), [analysedIssues]);
+  const groupedIssues = useMemo(
+    () => buildGroupedIssues(analysedIssues),
+    [analysedIssues],
+  );
 
-  const finalScore = useMemo(() => calculateFinalScore(analysedIssues), [analysedIssues]);
+  const finalScore = useMemo(
+    () => calculateFinalScore(analysedIssues),
+    [analysedIssues],
+  );
+
+  const [showAIHelpBtn, setShowAIHelpBtn] = useState(true);
 
   const baselineDelta = useMemo(
     () => buildBaselineDelta(finalScore, baselineFinalScore),
@@ -75,21 +95,29 @@ export function StatsPanel({
 
   const handleCheckMeasurements = async () => {
     setIsChecking(true);
-
     try {
       const { status, data } = await analyseCode(code);
 
-      if (status === 400 && data && typeof data === "object" && "status" in data) {
+      if (
+        status === 400 &&
+        data &&
+        typeof data === "object" &&
+        "status" in data
+      ) {
         const maybeStatus = (data as { status?: string }).status;
 
         if (maybeStatus === "FATAL_MESSAGE") {
           if (
             "fatalMessages" in data &&
-            Array.isArray((data as { fatalMessages?: unknown[] }).fatalMessages) &&
+            Array.isArray(
+              (data as { fatalMessages?: unknown[] }).fatalMessages,
+            ) &&
             (data as { fatalMessages?: unknown[] }).fatalMessages!.length > 0
           ) {
             setFatalMessage(
-              toIssueText((data as { fatalMessages: FatalEntry[] }).fatalMessages[0]),
+              toIssueText(
+                (data as { fatalMessages: FatalEntry[] }).fatalMessages[0],
+              ),
             );
           } else {
             setFatalMessage("Fatal error while analysing code.");
@@ -103,6 +131,7 @@ export function StatsPanel({
       }
 
       if (isTestsFailedPayload(data)) {
+        setShowAIHelpBtn(true);
         setFatalMessage("");
         resetToNeutralState();
         setTestsFailedPayload({
@@ -128,7 +157,10 @@ export function StatsPanel({
         setBaselineCategoryScores(nextCategoryScores);
       }
 
-      const nextFeedback = buildSubmitFeedback(nextFinalScore, previousFinalScore);
+      const nextFeedback = buildSubmitFeedback(
+        nextFinalScore,
+        previousFinalScore,
+      );
       if (nextFeedback) {
         setSubmitFeedback(nextFeedback);
       }
@@ -169,10 +201,15 @@ export function StatsPanel({
             onToggle={() => setIsFailedTestsOpen((previous) => !previous)}
             onRuleClick={onRuleClick}
             onLlmCodeBlocksFocus={onLlmCodeBlocksFocus}
+            setShowAIHelpBtn={setShowAIHelpBtn}
+            showAIHelpBtn={showAIHelpBtn}
           />
         ) : (
           <>
-            <FinalScoreCard finalScore={finalScore} baselineDelta={baselineDelta} />
+            <FinalScoreCard
+              finalScore={finalScore}
+              baselineDelta={baselineDelta}
+            />
             <GroupedIssuesSection
               groupedIssues={groupedIssues}
               expandedCategories={expandedCategories}

@@ -1,18 +1,8 @@
 import { getFailedSummary, toEditorPositionsFromAffectedLines } from "../data";
 import type { ParsedTestsFailedPayload, SonarIssuePosition } from "../types";
 import { requestLlmHelp } from "../api";
-import { recordsToCsv } from "../../../api/tools/data_formatters";
+import { recordsToCsv } from "../../../tools/data_formatters";
 import { useState, useTransition } from "react";
-
-type FailedTestAnalysisResponse = {
-  analysis?: {
-    code_blocks?: Array<{
-      start_line?: number;
-      end_line?: number;
-      explanation?: string;
-    }>;
-  };
-};
 
 type TestsFailedSectionProps = {
   payload: ParsedTestsFailedPayload;
@@ -26,6 +16,8 @@ type TestsFailedSectionProps = {
       content: string;
     }>,
   ) => void;
+  showAIHelpBtn: boolean;
+  setShowAIHelpBtn: any;
 };
 
 export function TestsFailedSection({
@@ -34,6 +26,8 @@ export function TestsFailedSection({
   onToggle,
   onRuleClick,
   onLlmCodeBlocksFocus,
+  showAIHelpBtn,
+  setShowAIHelpBtn,
 }: TestsFailedSectionProps) {
   const [AIstatus, setAIStatus] = useState<"idle" | "hint" | "problem">("idle");
   const [HintSummary, setHintSummary] = useState("");
@@ -41,6 +35,7 @@ export function TestsFailedSection({
   const [CodeBlocks, setCodeBlocks] = useState<
     Array<{ start_line?: number; end_line?: number; explanation?: string }>
   >([]);
+  const [codeBlocksHighlighted, setCodeBlocksHighlighted] = useState(false);
   const [loading, startTransition] = useTransition();
 
   const helpLeonor = () => {
@@ -63,6 +58,7 @@ export function TestsFailedSection({
       if (response.analysis.code_blocks.length > 0) {
         setCodeBlocks(response.analysis.code_blocks);
       }
+      setShowAIHelpBtn(false);
       setAIStatus("hint");
     });
   };
@@ -156,22 +152,33 @@ export function TestsFailedSection({
         </div>
       ) : null}
 
-      <button
-        className="statsActionButton"
-        type="button"
-        onClick={() => {
-          const positions = toEditorPositionsFromAffectedLines(
-            payload.affectedLines,
-          );
-          onRuleClick(positions);
-        }}
-        disabled={payload.affectedLines.length === 0}
-      >
-        Highlight possible code blocks
-      </button>
-      <button disabled={loading || AIstatus === "problem"} onClick={helpLeonor}>
-        {loading ? "Thinking..." : "Help Leonor 👾💻"}
-      </button>
+      {payload.affectedLines.length > 0 ? (
+        <button
+          className="statsActionButton"
+          type="button"
+          onClick={() => {
+            if (codeBlocksHighlighted) {
+              onRuleClick([]);
+              setCodeBlocksHighlighted(false);
+            } else {
+              const positions = toEditorPositionsFromAffectedLines(
+                payload.affectedLines,
+              );
+              onRuleClick(positions);
+              setCodeBlocksHighlighted(true);
+            }
+          }}
+        >
+          {codeBlocksHighlighted ? "X" : "Highlight possible code blocks"}
+        </button>
+      ) : (
+        <p>No Affected blocks detected </p>
+      )}
+      {showAIHelpBtn && (
+        <button onClick={helpLeonor}>
+          {loading ? "Thinking..." : "Help Leonor 👾💻"}
+        </button>
+      )}
 
       {AIstatus == "hint" && HintSummary.length > 0 && (
         <div>

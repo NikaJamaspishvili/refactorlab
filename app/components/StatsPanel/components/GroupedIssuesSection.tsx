@@ -1,4 +1,8 @@
-import { formatAtMostOneDecimal, getCategoryDelta, toLineOnlyPositions } from "../data";
+import {
+  formatAtMostOneDecimal,
+  getCategoryDelta,
+  toLineOnlyPositions,
+} from "../data";
 import type { GroupedIssueCategory, SonarIssuePosition } from "../types";
 
 type GroupedIssuesSectionProps = {
@@ -51,7 +55,9 @@ export function GroupedIssuesSection({
             >
               <span className="statsCategoryName">{group.category}</span>
               <span className="statsCategoryHeaderRight">
-                <span className="statsCategoryScore">{formatAtMostOneDecimal(group.score)}/100</span>
+                <span className="statsCategoryScore">
+                  {formatAtMostOneDecimal(group.score)}/100
+                </span>
                 {categoryDelta ? (
                   <span
                     className={`statsFinalScoreDelta statsFinalScoreDelta${categoryDelta.direction}`}
@@ -59,46 +65,52 @@ export function GroupedIssuesSection({
                     {categoryDelta.label}
                   </span>
                 ) : null}
-                <span className={`statsCategoryArrow ${isOpen ? "statsCategoryArrowOpen" : ""}`}>
+                <span
+                  className={`statsCategoryArrow ${isOpen ? "statsCategoryArrowOpen" : ""}`}
+                >
                   ▾
                 </span>
               </span>
             </button>
 
-            <div className={`statsCategoryBody ${isOpen ? "statsCategoryBodyOpen" : ""}`}>
+            <div
+              className={`statsCategoryBody ${isOpen ? "statsCategoryBodyOpen" : ""}`}
+            >
               <div className="statsCategoryBodyInner">
                 <div className="statsCategoryMeta">
-                  {group.problemCount} problems · {group.issues.length} rules · deduction: -
-                  {formatAtMostOneDecimal(group.deduction)}
+                  {group.problemCount} problems · {group.issues.length} rules ·
+                  deduction: -{formatAtMostOneDecimal(group.deduction)}
                 </div>
 
                 {group.issues.map((issue) => (
                   <div
                     key={`${group.category}-${issue.ruleId}`}
                     className={`statsIssueCard statsIssueCardClickable ${
-                      selectedRuleId === issue.ruleId ? "statsIssueCardActive" : ""
+                      selectedRuleId === issue.ruleId
+                        ? "statsIssueCardActive"
+                        : ""
                     }`}
                     role="button"
                     tabIndex={0}
                     onClick={() => {
                       onRuleSelect(issue.ruleId);
-                      onRuleClick(toLineOnlyPositions(issue.positions));
                     }}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
                         onRuleSelect(issue.ruleId);
-                        onRuleClick(toLineOnlyPositions(issue.positions));
                       }
                     }}
                   >
                     <div className="statsIssueTitle">{issue.title}</div>
-                    <div className="statsIssueDescription">{issue.description}</div>
+                    <div className="statsIssueDescription">
+                      {issue.description}
+                    </div>
                     {revealedHints[issue.ruleId] ? (
                       <div
                         className="statsIssueAction"
                         dangerouslySetInnerHTML={{
-                          __html: `action: ${issue.hint_1}`,
+                          __html: `${issue.hint_1}`,
                         }}
                       />
                     ) : null}
@@ -107,15 +119,28 @@ export function GroupedIssuesSection({
                       {formatAtMostOneDecimal(issue.deductedPoints)}
                     </div>
                     <div className="statsIssueButtons">
-                      <div
-                        className="statsButton"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onToggleHint(issue.ruleId);
-                        }}
-                      >
+                      <div className="statsButton">
                         <div>
-                          <button>{revealedHints[issue.ruleId] ? "X" : "action"}</button>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onToggleHint(issue.ruleId);
+                            }}
+                          >
+                            {revealedHints[issue.ruleId]
+                              ? "X"
+                              : "General Actions"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onRuleClick(toLineOnlyPositions(issue.positions));
+                            }}
+                          >
+                            Hint
+                          </button>
                         </div>
                       </div>
                     </div>

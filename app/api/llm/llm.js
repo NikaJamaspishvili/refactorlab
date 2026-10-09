@@ -27,7 +27,10 @@ export async function callLLM(SYSTEM_PROMPT, HUMAN_MESSAGE, RESPONSE_FORMAT) {
       type: "json_schema",
       json_schema: RESPONSE_FORMAT,
     },
+    reasoning_effort: "low",
   });
+
+  console.log(response);
   const content = response.choices?.[0]?.message?.content ?? '{"hints":[]}';
   return content;
 }
