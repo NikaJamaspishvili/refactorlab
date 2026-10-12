@@ -1,5 +1,5 @@
 "use server";
-import AuthButtons from "../components/auth-buttons";
+import AuthButtons from "../_components/auth-buttons";
 async function page() {
   return (
     <div>
