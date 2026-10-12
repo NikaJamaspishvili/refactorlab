@@ -6,11 +6,42 @@ enum AUTHOPTIONS {
   MANUAL
 }
 
-model Account {
-  id        String     @id @default(uuid())
-  email     String  @unique
-  username  String  @unique
-  provider  AUTHOPTIONS
-  createdAt TimestamptzString @default(now())
-  updatedAt temporal.updatedAtString()
+enum EXERCISEDIFFICULTY {
+  EASY
+  NORMAL
+  HARD
 }
+
+model Account {
+  id                      String     @id @default(uuid())
+  email                   String    @unique
+  username                String    @unique
+  provider                AUTHOPTIONS
+  createdAt               TimestamptzString @default(now())
+  updatedAt               temporal.updatedAtString()
+  submissions             Submissions[]
+}
+
+model Exercises {
+  id                      Int       @id @default(autoincrement())
+  code                    String
+  title                   String
+  description             String
+  mainFunctionName        String
+  tests                   Json
+  HotLines                String
+  difficulty              EXERCISEDIFFICULTY
+}
+
+model Submissions {
+  userId                  String
+  exerciseId              Int
+  score                   Int
+
+  user                  Account   @relation(fields: [userId], references: [id])
+  exercise              Exercises @relation(fields: [exerciseId], references: [id])
+  @@id([userId, exerciseId])
+  @@index([userId])
+  @@index([exerciseId])
+}
+

@@ -18,7 +18,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'b6b27b2701c2663a646ae1bb57cdf5a20091bbbf1857a184ecf7ea08b91aa6f8'>;
+  StorageHashBase<'c08517cdffd798df37b38218b8a24b08224e829667fb420ce8201fae1f1a1afa'>;
 export type ExecutionHash =
   ExecutionHashBase<'8eac17e7fd1443406e86cdbb7207e76d0c3bfe54d448c5bdd364379ae86f1675'>;
 export type ProfileHash =
@@ -242,6 +242,21 @@ export type FieldOutputTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly username: CodecTypes['pg/text@1']['output'];
     };
+    readonly Exercises: {
+      readonly HotLines: CodecTypes['pg/text@1']['output'];
+      readonly code: CodecTypes['pg/text@1']['output'];
+      readonly description: CodecTypes['pg/text@1']['output'];
+      readonly difficulty: 'EASY' | 'NORMAL' | 'HARD';
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly mainFunctionName: CodecTypes['pg/text@1']['output'];
+      readonly tests: CodecTypes['pg/json@1']['output'];
+      readonly title: CodecTypes['pg/text@1']['output'];
+    };
+    readonly Submissions: {
+      readonly exerciseId: CodecTypes['pg/int4@1']['output'];
+      readonly score: CodecTypes['pg/int4@1']['output'];
+      readonly userId: CodecTypes['pg/text@1']['output'];
+    };
   };
 };
 export type FieldInputTypes = {
@@ -253,6 +268,21 @@ export type FieldInputTypes = {
       readonly provider: 'GOOGLE' | 'GITHUB' | 'MANUAL';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly username: CodecTypes['pg/text@1']['input'];
+    };
+    readonly Exercises: {
+      readonly HotLines: CodecTypes['pg/text@1']['input'];
+      readonly code: CodecTypes['pg/text@1']['input'];
+      readonly description: CodecTypes['pg/text@1']['input'];
+      readonly difficulty: 'EASY' | 'NORMAL' | 'HARD';
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly mainFunctionName: CodecTypes['pg/text@1']['input'];
+      readonly tests: CodecTypes['pg/json@1']['input'];
+      readonly title: CodecTypes['pg/text@1']['input'];
+    };
+    readonly Submissions: {
+      readonly exerciseId: CodecTypes['pg/int4@1']['input'];
+      readonly score: CodecTypes['pg/int4@1']['input'];
+      readonly userId: CodecTypes['pg/text@1']['input'];
     };
   };
 };
@@ -266,6 +296,21 @@ export type StorageColumnTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly username: CodecTypes['pg/text@1']['output'];
     };
+    readonly Exercises: {
+      readonly code: CodecTypes['pg/text@1']['output'];
+      readonly description: CodecTypes['pg/text@1']['output'];
+      readonly difficulty: 'EASY' | 'NORMAL' | 'HARD';
+      readonly HotLines: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly mainFunctionName: CodecTypes['pg/text@1']['output'];
+      readonly tests: CodecTypes['pg/json@1']['output'];
+      readonly title: CodecTypes['pg/text@1']['output'];
+    };
+    readonly Submissions: {
+      readonly exerciseId: CodecTypes['pg/int4@1']['output'];
+      readonly score: CodecTypes['pg/int4@1']['output'];
+      readonly userId: CodecTypes['pg/text@1']['output'];
+    };
   };
 };
 export type StorageColumnInputTypes = {
@@ -278,6 +323,21 @@ export type StorageColumnInputTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly username: CodecTypes['pg/text@1']['input'];
     };
+    readonly Exercises: {
+      readonly code: CodecTypes['pg/text@1']['input'];
+      readonly description: CodecTypes['pg/text@1']['input'];
+      readonly difficulty: 'EASY' | 'NORMAL' | 'HARD';
+      readonly HotLines: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly mainFunctionName: CodecTypes['pg/text@1']['input'];
+      readonly tests: CodecTypes['pg/json@1']['input'];
+      readonly title: CodecTypes['pg/text@1']['input'];
+    };
+    readonly Submissions: {
+      readonly exerciseId: CodecTypes['pg/int4@1']['input'];
+      readonly score: CodecTypes['pg/int4@1']['input'];
+      readonly userId: CodecTypes['pg/text@1']['input'];
+    };
   };
 };
 
@@ -289,13 +349,35 @@ export namespace Models {
     provider: 'GOOGLE' | 'GITHUB' | 'MANUAL';
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     username: CodecTypes['pg/text@1']['output'];
+    submissions: public_Submissions[];
+    readonly [RelationKeys]?: 'submissions';
+  };
+  export type public_Exercises = {
+    HotLines: CodecTypes['pg/text@1']['output'];
+    code: CodecTypes['pg/text@1']['output'];
+    description: CodecTypes['pg/text@1']['output'];
+    difficulty: 'EASY' | 'NORMAL' | 'HARD';
+    id: CodecTypes['pg/int4@1']['output'];
+    mainFunctionName: CodecTypes['pg/text@1']['output'];
+    tests: CodecTypes['pg/json@1']['output'];
+    title: CodecTypes['pg/text@1']['output'];
     readonly [RelationKeys]?: never;
+  };
+  export type public_Submissions = {
+    exerciseId: CodecTypes['pg/int4@1']['output'];
+    score: CodecTypes['pg/int4@1']['output'];
+    userId: CodecTypes['pg/text@1']['output'];
+    exercise: public_Exercises;
+    user: public_Account;
+    readonly [RelationKeys]?: 'exercise' | 'user';
   };
 }
 
 export declare const models: {
   public: {
     Account: Models.public_Account;
+    Exercises: Models.public_Exercises;
+    Submissions: Models.public_Submissions;
   };
 };
 
@@ -365,11 +447,139 @@ type ContractBase = Omit<
               indexes: readonly [];
               foreignKeys: readonly [];
             };
+            readonly Exercises: {
+              columns: {
+                readonly HotLines: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly code: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly description: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly difficulty: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                  readonly many: false;
+                };
+                readonly mainFunctionName: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly tests: {
+                  readonly dataType: 'pg/json';
+                  readonly codecId: 'pg/json@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly title: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [];
+              foreignKeys: readonly [];
+            };
+            readonly Submissions: {
+              columns: {
+                readonly exerciseId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly score: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly userId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['userId', 'exerciseId'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'Submissions_exerciseId_idx_3c45a784';
+                  readonly prefix: 'Submissions_exerciseId_idx';
+                  readonly columns: readonly ['exerciseId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'Submissions_userId_idx_a489d58a';
+                  readonly prefix: 'Submissions_userId_idx';
+                  readonly columns: readonly ['userId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Submissions';
+                    readonly columns: readonly ['userId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Account';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Submissions';
+                    readonly columns: readonly ['exerciseId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Exercises';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
           };
           readonly valueSet: {
             readonly AUTHOPTIONS: {
               readonly kind: 'valueSet';
               readonly values: readonly ['GOOGLE', 'GITHUB', 'MANUAL'];
+            };
+            readonly EXERCISEDIFFICULTY: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['EASY', 'NORMAL', 'HARD'];
             };
           };
         };
@@ -383,6 +593,11 @@ type ContractBase = Omit<
   readonly targetFamily: 'sql';
   readonly roots: {
     readonly Account: { readonly namespace: 'public' & NamespaceId; readonly model: 'Account' };
+    readonly Exercises: { readonly namespace: 'public' & NamespaceId; readonly model: 'Exercises' };
+    readonly Submissions: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'Submissions';
+    };
   };
   readonly domain: {
     readonly namespaces: {
@@ -421,7 +636,19 @@ type ContractBase = Omit<
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
             };
-            readonly relations: Record<string, never>;
+            readonly relations: {
+              readonly submissions: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Submissions';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['userId'];
+                };
+              };
+            };
             readonly storage: {
               readonly table: 'Account';
               readonly namespaceId: 'public';
@@ -435,6 +662,108 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly Exercises: {
+            readonly fields: {
+              readonly HotLines: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly code: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly description: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly difficulty: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly mainFunctionName: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly tests: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/json@1' };
+              };
+              readonly title: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: Record<string, never>;
+            readonly storage: {
+              readonly table: 'Exercises';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly HotLines: { readonly column: 'HotLines' };
+                readonly code: { readonly column: 'code' };
+                readonly description: { readonly column: 'description' };
+                readonly difficulty: { readonly column: 'difficulty' };
+                readonly id: { readonly column: 'id' };
+                readonly mainFunctionName: { readonly column: 'mainFunctionName' };
+                readonly tests: { readonly column: 'tests' };
+                readonly title: { readonly column: 'title' };
+              };
+            };
+          };
+          readonly Submissions: {
+            readonly fields: {
+              readonly exerciseId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly score: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly exercise: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Exercises';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['exerciseId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly user: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Account';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['userId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'Submissions';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly exerciseId: { readonly column: 'exerciseId' };
+                readonly score: { readonly column: 'score' };
+                readonly userId: { readonly column: 'userId' };
+              };
+            };
+          };
         };
         readonly enum: {
           readonly AUTHOPTIONS: {
@@ -445,12 +774,25 @@ type ContractBase = Omit<
               { readonly name: 'MANUAL'; readonly value: 'MANUAL' },
             ];
           };
+          readonly EXERCISEDIFFICULTY: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'EASY'; readonly value: 'EASY' },
+              { readonly name: 'NORMAL'; readonly value: 'NORMAL' },
+              { readonly name: 'HARD'; readonly value: 'HARD' },
+            ];
+          };
         };
         readonly enumMemberTypes?: {
           readonly AUTHOPTIONS: readonly [
             { readonly name: 'GOOGLE'; readonly value: 'GOOGLE' },
             { readonly name: 'GITHUB'; readonly value: 'GITHUB' },
             { readonly name: 'MANUAL'; readonly value: 'MANUAL' },
+          ];
+          readonly EXERCISEDIFFICULTY: readonly [
+            { readonly name: 'EASY'; readonly value: 'EASY' },
+            { readonly name: 'NORMAL'; readonly value: 'NORMAL' },
+            { readonly name: 'HARD'; readonly value: 'HARD' },
           ];
         };
       };
