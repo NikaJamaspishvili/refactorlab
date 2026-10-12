@@ -1,7 +1,7 @@
 import { getFailedSummary, toEditorPositionsFromAffectedLines } from "../data";
 import type { ParsedTestsFailedPayload, SonarIssuePosition } from "../types";
 import { requestLlmHelp } from "../api";
-import { recordsToCsv } from "../../../tools/data_formatters";
+import { recordsToCsv } from "../../../_tools/data_formatters";
 import { useState, useTransition } from "react";
 
 type TestsFailedSectionProps = {
