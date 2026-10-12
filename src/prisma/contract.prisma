@@ -1,0 +1,16 @@
+// use prisma-8
+
+enum AUTHOPTIONS {
+  GOOGLE
+  GITHUB
+  MANUAL
+}
+
+model Account {
+  id        String     @id @default(uuid())
+  email     String  @unique
+  username  String  @unique
+  provider  AUTHOPTIONS
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+}
