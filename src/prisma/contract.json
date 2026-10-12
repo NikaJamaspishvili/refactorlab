@@ -215,7 +215,23 @@
                 }
               }
             },
-            "relations": {},
+            "relations": {
+              "submissions": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "exerciseId"
+                  ]
+                },
+                "to": {
+                  "model": "Submissions",
+                  "namespace": "public"
+                }
+              }
+            },
             "storage": {
               "fields": {
                 "HotLines": {
@@ -249,6 +265,13 @@
           },
           "Submissions": {
             "fields": {
+              "count": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
               "exerciseId": {
                 "nullable": false,
                 "type": {
@@ -307,6 +330,9 @@
             },
             "storage": {
               "fields": {
+                "count": {
+                  "column": "count"
+                },
                 "exerciseId": {
                   "column": "exerciseId"
                 },
@@ -471,6 +497,11 @@
             },
             "Submissions": {
               "columns": {
+                "count": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
                 "exerciseId": {
                   "codecId": "pg/int4@1",
                   "dataType": "pg/int4",
@@ -577,7 +608,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "c08517cdffd798df37b38218b8a24b08224e829667fb420ce8201fae1f1a1afa"
+    "storageHash": "08f32d1be2afeb2adb61f4c549cbdc1207622be83c199cc3cc8c049515df7b73"
   },
   "execution": {
     "executionHash": "8eac17e7fd1443406e86cdbb7207e76d0c3bfe54d448c5bdd364379ae86f1675",

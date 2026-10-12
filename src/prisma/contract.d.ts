@@ -18,7 +18,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'c08517cdffd798df37b38218b8a24b08224e829667fb420ce8201fae1f1a1afa'>;
+  StorageHashBase<'08f32d1be2afeb2adb61f4c549cbdc1207622be83c199cc3cc8c049515df7b73'>;
 export type ExecutionHash =
   ExecutionHashBase<'8eac17e7fd1443406e86cdbb7207e76d0c3bfe54d448c5bdd364379ae86f1675'>;
 export type ProfileHash =
@@ -253,6 +253,7 @@ export type FieldOutputTypes = {
       readonly title: CodecTypes['pg/text@1']['output'];
     };
     readonly Submissions: {
+      readonly count: CodecTypes['pg/int4@1']['output'];
       readonly exerciseId: CodecTypes['pg/int4@1']['output'];
       readonly score: CodecTypes['pg/int4@1']['output'];
       readonly userId: CodecTypes['pg/text@1']['output'];
@@ -280,6 +281,7 @@ export type FieldInputTypes = {
       readonly title: CodecTypes['pg/text@1']['input'];
     };
     readonly Submissions: {
+      readonly count: CodecTypes['pg/int4@1']['input'];
       readonly exerciseId: CodecTypes['pg/int4@1']['input'];
       readonly score: CodecTypes['pg/int4@1']['input'];
       readonly userId: CodecTypes['pg/text@1']['input'];
@@ -307,6 +309,7 @@ export type StorageColumnTypes = {
       readonly title: CodecTypes['pg/text@1']['output'];
     };
     readonly Submissions: {
+      readonly count: CodecTypes['pg/int4@1']['output'];
       readonly exerciseId: CodecTypes['pg/int4@1']['output'];
       readonly score: CodecTypes['pg/int4@1']['output'];
       readonly userId: CodecTypes['pg/text@1']['output'];
@@ -334,6 +337,7 @@ export type StorageColumnInputTypes = {
       readonly title: CodecTypes['pg/text@1']['input'];
     };
     readonly Submissions: {
+      readonly count: CodecTypes['pg/int4@1']['input'];
       readonly exerciseId: CodecTypes['pg/int4@1']['input'];
       readonly score: CodecTypes['pg/int4@1']['input'];
       readonly userId: CodecTypes['pg/text@1']['input'];
@@ -361,9 +365,11 @@ export namespace Models {
     mainFunctionName: CodecTypes['pg/text@1']['output'];
     tests: CodecTypes['pg/json@1']['output'];
     title: CodecTypes['pg/text@1']['output'];
-    readonly [RelationKeys]?: never;
+    submissions: public_Submissions[];
+    readonly [RelationKeys]?: 'submissions';
   };
   export type public_Submissions = {
+    count: CodecTypes['pg/int4@1']['output'];
     exerciseId: CodecTypes['pg/int4@1']['output'];
     score: CodecTypes['pg/int4@1']['output'];
     userId: CodecTypes['pg/text@1']['output'];
@@ -509,6 +515,12 @@ type ContractBase = Omit<
             };
             readonly Submissions: {
               columns: {
+                readonly count: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
                 readonly exerciseId: {
                   readonly dataType: 'pg/int4';
                   readonly codecId: 'pg/int4@1';
@@ -697,7 +709,19 @@ type ContractBase = Omit<
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
             };
-            readonly relations: Record<string, never>;
+            readonly relations: {
+              readonly submissions: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Submissions';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['exerciseId'];
+                };
+              };
+            };
             readonly storage: {
               readonly table: 'Exercises';
               readonly namespaceId: 'public';
@@ -715,6 +739,10 @@ type ContractBase = Omit<
           };
           readonly Submissions: {
             readonly fields: {
+              readonly count: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
               readonly exerciseId: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
@@ -758,6 +786,7 @@ type ContractBase = Omit<
               readonly table: 'Submissions';
               readonly namespaceId: 'public';
               readonly fields: {
+                readonly count: { readonly column: 'count' };
                 readonly exerciseId: { readonly column: 'exerciseId' };
                 readonly score: { readonly column: 'score' };
                 readonly userId: { readonly column: 'userId' };
