@@ -1,11 +1,11 @@
 import { eslint, syntaxCheck } from "./eslint";
 import { fileURLToPath } from "url";
-import { withTempCodeFile } from "../../tools/fs";
+import { withTempCodeFile } from "../../_tools/fs";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { RunTests } from "./runtests";
 import EXERCISES from "@/exercises.json";
-import { getOutputAffectingLines } from "../../tools/output_affecting_lines";
+import { getOutputAffectingLines } from "../../_tools/output_affecting_lines";
 
 export async function POST(request) {
   const { code, exerciseId } = await request.json();

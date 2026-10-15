@@ -52,10 +52,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      console.log(token);
       // Attach user ID to session for use in your app
-      if (token.sub) {
-        session.user.id = token.sub;
+      if (token.userId) {
+        session.user.userId = token.userId;
       }
       return session;
     },
