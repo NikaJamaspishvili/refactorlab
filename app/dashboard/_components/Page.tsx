@@ -4,9 +4,7 @@ import LeaderBoard from "./LeaderBoard/LeaderBoard";
 import { useState } from "react";
 
 const Page = ({ userId }: { userId?: string }) => {
-  const [tab, setTab] = useState<
-    "LEADERBOARD" | "ALLEXERCISES" | "SUBMISSIONS"
-  >("ALLEXERCISES");
+  const [tab, setTab] = useState<"LEADERBOARD" | "ALLEXERCISES">("LEADERBOARD");
 
   return (
     <main>

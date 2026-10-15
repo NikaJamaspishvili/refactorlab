@@ -1,100 +1,125 @@
-// how much problems in total solved -> how much was easy, normal, hard
-// highest score, harder problems have higher score to obtain
+"use client";
 
-const leaderboardData = {
-  MOST_PROBLEMS_SOLVED: [
-    {
-      user: { username: "nika" },
-      solvedCount: 20,
-      detailed: { hard: 4, normal: 3, easy: 13 },
-    },
-    {
-      user: { username: "luka" },
-      solvedCount: 18,
-      detailed: { hard: 5, normal: 6, easy: 7 },
-    },
-    {
-      user: { username: "mariam" },
-      solvedCount: 16,
-      detailed: { hard: 3, normal: 7, easy: 6 },
-    },
-  ],
-  MOST_PROBLEMS_TACKLED: [
-    {
-      user: { username: "nika" },
-      tackledCount: 100,
-      detailed: { hard: 40, normal: 50, easy: 10 },
-    },
-    {
-      user: { username: "gio" },
-      tackledCount: 92,
-      detailed: { hard: 28, normal: 44, easy: 20 },
-    },
-    {
-      user: { username: "ana" },
-      tackledCount: 85,
-      detailed: { hard: 22, normal: 41, easy: 22 },
-    },
-  ],
-  HIGHEST_SCORE: [
-    {
-      user: { username: "nika" },
-      sumScores: 3000,
-    },
-    {
-      user: { username: "lasha" },
-      sumScores: 2875,
-    },
-    {
-      user: { username: "salome" },
-      sumScores: 2740,
-    },
-  ],
-};
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { fetchLeaderboardInfo } from "../../_serverFunctions/leaderboard";
+import { graphType } from "../../types/types";
+
+type Difficulty = "HARD" | "NORMAL" | "EASY";
 
 const LeaderBoard = () => {
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [section, setSection] = useState<graphType>("MOST_PROBLEMS_TACKLED");
+  const [isPending, startTransition] = useTransition();
+
+  async function handleTabChange(nextSection?: graphType) {
+    if (nextSection === section) return;
+    startTransition(async () => {
+      const selected = nextSection ?? section;
+      if (nextSection) setSection(nextSection);
+
+      const data = await fetchLeaderboardInfo(selected, [
+        "HARD",
+        "NORMAL",
+        "EASY",
+      ]);
+      setLeaderboard(data.response);
+    });
+  }
+
+  useEffect(() => {
+    handleTabChange();
+  }, []);
+
+  const rows = useMemo(() => {
+    const valueKey =
+      section === "MOST_PROBLEMS_SOLVED"
+        ? "solvedCount"
+        : section === "MOST_PROBLEMS_TACKLED"
+          ? "tackledCount"
+          : "scoreSum";
+
+    const byUser: Record<
+      string,
+      {
+        userId: string;
+        username: string;
+        HARD: number;
+        NORMAL: number;
+        EASY: number;
+        TOTAL: number;
+      }
+    > = {};
+
+    for (const bucket of leaderboard) {
+      const difficulty = bucket.difficulty as Difficulty;
+      const list = bucket.data;
+
+      for (const item of list) {
+        const userId = item.userId;
+        const value = item[valueKey];
+
+        if (!byUser[userId]) {
+          byUser[userId] = {
+            userId,
+            username: item.username,
+            HARD: 0,
+            NORMAL: 0,
+            EASY: 0,
+            TOTAL: 0,
+          };
+        }
+
+        byUser[userId][difficulty] = value;
+        byUser[userId].TOTAL =
+          byUser[userId].HARD + byUser[userId].NORMAL + byUser[userId].EASY;
+      }
+    }
+
+    return Object.values(byUser).sort((a, b) => b.TOTAL - a.TOTAL);
+  }, [leaderboard, section]);
+
   return (
     <div>
-      <h2>Most Problems Solved</h2>
-      {leaderboardData.MOST_PROBLEMS_SOLVED.map((item, index) => (
-        <div key={`solved-${item.user.username}-${index}`}>
-          <p>
-            #{index + 1} {item.user.username} — solved: {item.solvedCount}
-          </p>
-          <p>
-            <span style={{ color: "red" }}>hard: {item.detailed.hard}</span> |{" "}
-            <span style={{ color: "gray" }}>
-              normal: {item.detailed.normal}
-            </span>{" "}
-            | <span style={{ color: "green" }}>easy: {item.detailed.easy}</span>
-          </p>
-        </div>
-      ))}
+      <nav style={{ display: "flex", gap: 16, marginBottom: 16 }}>
+        <button onClick={() => handleTabChange("MOST_PROBLEMS_SOLVED")}>
+          Most Problems Solved
+        </button>
+        <button onClick={() => handleTabChange("MOST_PROBLEMS_TACKLED")}>
+          Most Problems Tackled
+        </button>
+        <button onClick={() => handleTabChange("HIGHEST_SCORE")}>
+          Highest Score
+        </button>
+      </nav>
 
-      <h2>Most Problems Tackled</h2>
-      {leaderboardData.MOST_PROBLEMS_TACKLED.map((item, index) => (
-        <div key={`tackled-${item.user.username}-${index}`}>
-          <p>
-            #{index + 1} {item.user.username} — tackled: {item.tackledCount}
-          </p>
-          <p>
-            <span style={{ color: "red" }}>hard: {item.detailed.hard}</span> |{" "}
-            <span style={{ color: "gray" }}>
-              normal: {item.detailed.normal}
-            </span>{" "}
-            | <span style={{ color: "green" }}>easy: {item.detailed.easy}</span>
-          </p>
-        </div>
-      ))}
-
-      <h2>Highest Score</h2>
-      {leaderboardData.HIGHEST_SCORE.map((item, index) => (
-        <div key={`score-${item.user.username}-${index}`}>
-          <p>
-            #{index + 1} {item.user.username} — score: {item.sumScores}
-          </p>
-        </div>
-      ))}
+      {isPending ? (
+        <p>Loading...</p>
+      ) : rows.length === 0 ? (
+        <p>No data</p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>HARD</th>
+              <th>MEDIUM</th>
+              <th>EASY</th>
+              <th>TOTAL</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.userId}>
+                <td>{row.username}</td>
+                <td>{row.HARD}</td>
+                <td>{row.NORMAL}</td>
+                <td>{row.EASY}</td>
+                <td>{row.TOTAL}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };

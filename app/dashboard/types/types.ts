@@ -17,6 +17,6 @@ export type AllExercisesItem = {
   exerciseId: number;
 };
 
-interface session {
-  userId?: string;
-}
+export type informationType = ["HARD", "NORMAL", "EASY"];
+export type graphType =
+  "HIGHEST_SCORE" | "MOST_PROBLEMS_SOLVED" | "MOST_PROBLEMS_TACKLED";
