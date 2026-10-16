@@ -16,13 +16,15 @@ const runLeaderboardQuery = async ({
   metricKey,
   metricSelect,
   scoreCondition,
+  filterByUserId,
 }: {
   difficulty: string;
   metricKey: MetricKey;
   metricSelect: (f: any, fns: any) => any;
   scoreCondition: (f: any, fns: any) => any;
+  filterByUserId?: string;
 }) => {
-  const plan = baseLeaderboardQuery()
+  let plan = baseLeaderboardQuery()
     .select("userId", (f) => f.Submissions.userId)
     .select("username", (f) => f.Account.username)
     .select(metricKey, metricSelect)
@@ -31,45 +33,56 @@ const runLeaderboardQuery = async ({
         fns.eq(f.Exercises.difficulty, difficulty),
         scoreCondition(f, fns),
       ),
-    )
-    .groupBy("userId")
-    .groupBy("username")
-    .orderBy(metricKey, { direction: "desc" })
-    .limit(10)
-    .build();
+    );
 
-  return db.runtime().query(plan);
+  if (filterByUserId) {
+    const selectPlan = plan.where((f, fns) =>
+      fns.eq(f.Account.id, filterByUserId),
+    );
+    return db.runtime().query(selectPlan.build());
+  } else {
+    const groupPlan = plan
+      .groupBy("userId")
+      .groupBy("username")
+      .orderBy(metricKey, { direction: "desc" })
+      .limit(10);
+    return db.runtime().query(groupPlan.build());
+  }
 };
 
-const findMostProblemsSolved = (difficulty: string) =>
+const findMostProblemsSolved = (difficulty: string, filterByUserId?: string) =>
   runLeaderboardQuery({
     difficulty,
     metricKey: "solvedCount",
     metricSelect: (f, fns) => fns.count(f.Submissions.exerciseId),
     scoreCondition: (f, fns) => fns.eq(f.Submissions.score, 100),
+    filterByUserId,
   });
 
-const findMostProblemsTackled = (difficulty: string) =>
+const findMostProblemsTackled = (difficulty: string, filterByUserId?: string) =>
   runLeaderboardQuery({
     difficulty,
     metricKey: "tackledCount",
     metricSelect: (f, fns) => fns.count(f.Submissions.exerciseId),
     scoreCondition: (f, fns) => fns.lt(f.Submissions.score, 100),
+    filterByUserId,
   });
 
-const findHighestSumScore = (difficulty: string) =>
+const findHighestSumScore = (difficulty: string, filterByUserId?: string) =>
   runLeaderboardQuery({
     difficulty,
     metricKey: "scoreSum",
     metricSelect: (f, fns) => fns.sum(f.Submissions.score),
     scoreCondition: (f, fns) => fns.lt(f.Submissions.score, 100),
+    filterByUserId,
   });
 
 export const fetchLeaderboardInfo = async (
   section: sectionType,
   informationType: informationType,
+  filterByUserId?: string,
 ) => {
-  let finder: (difficulty: string) => Promise<any>;
+  let finder: (difficulty: string, filterByUserId?: string) => Promise<any>;
 
   if (section === "MOST_PROBLEMS_SOLVED") {
     finder = findMostProblemsSolved;
@@ -82,7 +95,7 @@ export const fetchLeaderboardInfo = async (
   const response = await Promise.all(
     informationType.map(async (difficulty) => ({
       difficulty,
-      data: await finder(difficulty),
+      data: await finder(difficulty, filterByUserId),
     })),
   );
 

@@ -11,6 +11,7 @@ const ChooseProfileImage = ({
   userId: string;
 }) => {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [isHoveringImage, setIsHoveringImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState(image);
 
   const avatarUrls = useMemo(
@@ -27,24 +28,51 @@ const ChooseProfileImage = ({
 
   return (
     <div style={{ display: "grid", gap: "10px", maxWidth: "500px" }}>
-      <img
-        src={selectedImage}
+      <button
+        type="button"
+        onClick={() => setIsPickerOpen((current) => !current)}
+        onMouseEnter={() => setIsHoveringImage(true)}
+        onMouseLeave={() => setIsHoveringImage(false)}
+        aria-label="Change profile image"
         style={{
+          position: "relative",
           width: "150px",
           height: "150px",
           borderRadius: "50%",
           border: "1px solid black",
-          objectFit: "cover",
+          padding: 0,
+          overflow: "hidden",
+          cursor: "pointer",
+          background: "transparent",
         }}
-        alt="User profile image"
-      />
-
-      <button
-        type="button"
-        onClick={() => setIsPickerOpen((current) => !current)}
-        style={{ width: "fit-content", padding: "8px 12px", cursor: "pointer" }}
       >
-        Choose image
+        <img
+          src={selectedImage}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            transition: "filter 180ms ease",
+            filter: isHoveringImage ? "brightness(0.55)" : "brightness(1)",
+          }}
+          alt="User profile image"
+        />
+        <span
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white",
+            fontWeight: 600,
+            opacity: isHoveringImage ? 1 : 0,
+            transition: "opacity 180ms ease",
+            pointerEvents: "none",
+          }}
+        >
+          Edit
+        </span>
       </button>
 
       {isPickerOpen ? (
@@ -88,17 +116,6 @@ const ChooseProfileImage = ({
         </div>
       ) : null}
 
-      <input
-        type="text"
-        value={selectedImage}
-        readOnly
-        aria-label="Selected profile image URL"
-        style={{
-          padding: "8px",
-          borderRadius: "6px",
-          border: "1px solid #cbd5e1",
-        }}
-      />
     </div>
   );
 };

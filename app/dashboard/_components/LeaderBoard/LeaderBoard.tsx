@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { fetchLeaderboardInfo } from "../../_serverFunctions/leaderboard";
 import { graphType } from "../../types/types";
+import { difficulties } from "@/app/common";
 
 type Difficulty = "HARD" | "NORMAL" | "EASY";
 
@@ -17,11 +18,7 @@ const LeaderBoard = () => {
       const selected = nextSection ?? section;
       if (nextSection) setSection(nextSection);
 
-      const data = await fetchLeaderboardInfo(selected, [
-        "HARD",
-        "NORMAL",
-        "EASY",
-      ]);
+      const data = await fetchLeaderboardInfo(selected, difficulties);
       setLeaderboard(data.response);
     });
   }

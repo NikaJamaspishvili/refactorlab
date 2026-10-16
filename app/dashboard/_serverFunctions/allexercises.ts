@@ -3,6 +3,7 @@
 import { db } from "@/src/prisma/db";
 import { AllExercisesFilter, AllExercisesItem } from "../types/types";
 import { addDifficultyWhere, addTitleWhere } from "../helpers";
+
 function normalise(rows: AllExercisesItem[]) {
   return rows.map((result) => ({
     count: result.count,

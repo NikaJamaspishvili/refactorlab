@@ -7,8 +7,15 @@ import {
   title,
 } from "../../types/types";
 
-function AllExercises({ userId }: { userId?: string }) {
-  const [exercises, setExercises] = useState<AllExercisesItem[]>([]);
+function AllExercises({
+  userId,
+  initialData,
+}: {
+  userId?: string;
+  initialData: AllExercisesItem[];
+}) {
+  const [exercises, setExercises] = useState<AllExercisesItem[]>(initialData);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -26,16 +33,7 @@ function AllExercises({ userId }: { userId?: string }) {
 
     const data = await FetchAllExercisesData(req, userId);
 
-    const normalized = data.map((item) => ({
-      count: item.count,
-      score: item.score,
-      title: item.title,
-      difficulty: item.difficulty as "HARD" | "NORMAL" | "EASY",
-      description: item.description,
-      exerciseId: item.exerciseId,
-    }));
-
-    setExercises([...normalized]);
+    setExercises([...data]);
   };
 
   return (

@@ -2,9 +2,17 @@
 import AllExercises from "./AllExercises/AllExercises";
 import LeaderBoard from "./LeaderBoard/LeaderBoard";
 import { useState } from "react";
-
-const Page = ({ userId }: { userId?: string }) => {
-  const [tab, setTab] = useState<"LEADERBOARD" | "ALLEXERCISES">("LEADERBOARD");
+import { AllExercisesItem } from "../types/types";
+const Page = ({
+  userId,
+  exerciseData,
+}: {
+  userId?: string;
+  exerciseData: AllExercisesItem[];
+}) => {
+  const [tab, setTab] = useState<"LEADERBOARD" | "ALLEXERCISES">(
+    "ALLEXERCISES",
+  );
 
   return (
     <main>
@@ -16,7 +24,7 @@ const Page = ({ userId }: { userId?: string }) => {
       {tab === "LEADERBOARD" ? (
         <LeaderBoard />
       ) : (
-        <AllExercises userId={userId} />
+        <AllExercises initialData={exerciseData} userId={userId} />
       )}
     </main>
   );
