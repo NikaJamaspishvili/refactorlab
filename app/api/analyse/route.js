@@ -61,10 +61,13 @@ export async function POST(request) {
     const STATUS = await submissionInformation(
       userId,
       Number(exerciseId),
-      100 - eslint_res.finalScore,
+      eslint_res.finalScore,
+      code,
+      eslint_res,
     );
-
     eslint_res.submissionStatus = STATUS;
+
+    console.info(eslint_res.submissionStatus);
 
     return Response.json(eslint_res, { status: 200 });
   } catch (error) {

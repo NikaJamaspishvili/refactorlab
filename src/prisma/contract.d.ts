@@ -18,9 +18,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'6ce89b272e30ece1cd69845ae34cda1f603a3bc0a0b15ee3657bc7a4b75e6da2'>;
+  StorageHashBase<'79645efed5ed4564f89153d5f6952050809293aebf296a0c14ff6217fd8c5b8c'>;
 export type ExecutionHash =
-  ExecutionHashBase<'8eac17e7fd1443406e86cdbb7207e76d0c3bfe54d448c5bdd364379ae86f1675'>;
+  ExecutionHashBase<'3a804cbae798b6a5a8304c6a73027a6b220f85068c3ec0a05c6e4dda2f45af32'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -255,8 +255,11 @@ export type FieldOutputTypes = {
     };
     readonly Submissions: {
       readonly count: CodecTypes['pg/int4@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly exerciseId: CodecTypes['pg/int4@1']['output'];
+      readonly latestSubmission: CodecTypes['pg/json@1']['output'];
       readonly score: CodecTypes['pg/int4@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly userId: CodecTypes['pg/text@1']['output'];
     };
   };
@@ -284,8 +287,11 @@ export type FieldInputTypes = {
     };
     readonly Submissions: {
       readonly count: CodecTypes['pg/int4@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly exerciseId: CodecTypes['pg/int4@1']['input'];
+      readonly latestSubmission: CodecTypes['pg/json@1']['input'];
       readonly score: CodecTypes['pg/int4@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly userId: CodecTypes['pg/text@1']['input'];
     };
   };
@@ -313,8 +319,11 @@ export type StorageColumnTypes = {
     };
     readonly Submissions: {
       readonly count: CodecTypes['pg/int4@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly exerciseId: CodecTypes['pg/int4@1']['output'];
+      readonly latestSubmission: CodecTypes['pg/json@1']['output'];
       readonly score: CodecTypes['pg/int4@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly userId: CodecTypes['pg/text@1']['output'];
     };
   };
@@ -342,8 +351,11 @@ export type StorageColumnInputTypes = {
     };
     readonly Submissions: {
       readonly count: CodecTypes['pg/int4@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly exerciseId: CodecTypes['pg/int4@1']['input'];
+      readonly latestSubmission: CodecTypes['pg/json@1']['input'];
       readonly score: CodecTypes['pg/int4@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly userId: CodecTypes['pg/text@1']['input'];
     };
   };
@@ -375,8 +387,11 @@ export namespace Models {
   };
   export type public_Submissions = {
     count: CodecTypes['pg/int4@1']['output'];
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     exerciseId: CodecTypes['pg/int4@1']['output'];
+    latestSubmission: CodecTypes['pg/json@1']['output'];
     score: CodecTypes['pg/int4@1']['output'];
+    updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     userId: CodecTypes['pg/text@1']['output'];
     exercise: public_Exercises;
     user: public_Account;
@@ -532,15 +547,33 @@ type ContractBase = Omit<
                   readonly nullable: false;
                   readonly many: false;
                 };
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
                 readonly exerciseId: {
                   readonly dataType: 'pg/int4';
                   readonly codecId: 'pg/int4@1';
                   readonly nullable: false;
                   readonly many: false;
                 };
+                readonly latestSubmission: {
+                  readonly dataType: 'pg/json';
+                  readonly codecId: 'pg/json@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
                 readonly score: {
                   readonly dataType: 'pg/int4';
                   readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly updatedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
                   readonly nullable: false;
                   readonly many: false;
                 };
@@ -759,13 +792,31 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
               readonly exerciseId: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
+              readonly latestSubmission: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/json@1' };
+              };
               readonly score: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
               };
               readonly userId: {
                 readonly nullable: false;
@@ -803,8 +854,11 @@ type ContractBase = Omit<
               readonly namespaceId: 'public';
               readonly fields: {
                 readonly count: { readonly column: 'count' };
+                readonly createdAt: { readonly column: 'createdAt' };
                 readonly exerciseId: { readonly column: 'exerciseId' };
+                readonly latestSubmission: { readonly column: 'latestSubmission' };
                 readonly score: { readonly column: 'score' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
                 readonly userId: { readonly column: 'userId' };
               };
             };
@@ -888,6 +942,23 @@ type ContractBase = Omit<
           readonly onUpdate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
           readonly ref: {
             readonly entry: 'Account';
+            readonly field: 'updatedAt';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'Submissions';
+            readonly field: 'createdAt';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly onUpdate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'Submissions';
             readonly field: 'updatedAt';
             readonly namespace: 'public';
           };

@@ -1,0 +1,1 @@
+export const SUBMISSION_NOTICE_TIMEOUT_MS = 10_000;

@@ -79,3 +79,8 @@ export type ParsedTestsFailedPayload = {
   testsResult: TestsResultPayload;
   affectedLines: AffectedLineRange[];
 };
+
+export type SubmissionStatus =
+  | "FIRST_ACCEPTED_SUBMISSION"
+  | "HIGHER_SCORE_SUBMISSION"
+  | "HIGHEST_SCORE_SUBMISSION";

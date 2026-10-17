@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { MouseEvent } from "react";
 import { GROUPS } from "@/app/api/analyse/static";
-import { analyseCode, mapSonarIssues } from "./api";
+import { analyseCode, getAnalysisMeta, mapSonarIssues } from "./api";
 import {
   formatAtMostOneDecimal,
   getPercentChange,
@@ -12,6 +12,8 @@ import {
   toIssueText,
 } from "./data";
 import { FinalScoreCard } from "./components/FinalScoreCard";
+import { FirstAcceptedSubmissionNotice } from "./components/FirstAcceptedSubmissionNotice";
+import { HigherScoreSubmissionNotice } from "./components/HigherScoreSubmissionNotice";
 import { TestsFailedSection } from "./components/TestsFailedSection";
 import type {
   ChangeDirection,
@@ -19,6 +21,7 @@ import type {
   ParsedTestsFailedPayload,
   SonarIssuePosition,
   SonarIssuesResponse,
+  SubmissionStatus,
 } from "./types";
 
 type PointerCard = {
@@ -145,6 +148,11 @@ export function StatsPanel({
     [initialScoring],
   );
 
+  const baselineFinalScore = useMemo(
+    () => calculateFinalScoreFromGroups(baselineGroupScores),
+    [baselineGroupScores],
+  );
+
   const [isChecking, setIsChecking] = useState(false);
   const [showAIHelpBtn, setShowAIHelpBtn] = useState(true);
 
@@ -158,7 +166,11 @@ export function StatsPanel({
     number
   > | null>(null);
 
+  const [currentFinalScore, setCurrentFinalScore] =
+    useState<number>(baselineFinalScore);
+  const [initialFinalScore] = useState<number>(baselineFinalScore);
   const [previousFinalScore, setPreviousFinalScore] = useState<number>();
+
   const [lastCheckedCode, setLastCheckedCode] = useState<string | null>(null);
 
   const [fatalMessage, setFatalMessage] = useState("");
@@ -166,29 +178,55 @@ export function StatsPanel({
     useState<ParsedTestsFailedPayload | null>(null);
   const [isFailedTestsOpen, setIsFailedTestsOpen] = useState(false);
 
-  const finalScore = useMemo(
-    () => calculateFinalScoreFromGroups(groupScores),
-    [groupScores],
-  );
-
-  const initialFinalScore = useMemo(
-    () => calculateFinalScoreFromGroups(initialGroupScores),
-    [initialGroupScores],
-  );
+  const [showFirstAcceptedNotice, setShowFirstAcceptedNotice] = useState(false);
+  const [showHighestScoreNotice, setShowHighestScoreNotice] = useState(false);
+  const [showHigherScoreNotice, setShowHigherScoreNotice] = useState(false);
+  const [firstAcceptedNoticeKey, setFirstAcceptedNoticeKey] = useState(0);
+  const [highestScoreNoticeKey, setHighestScoreNoticeKey] = useState(0);
+  const [higherScoreNoticeKey, setHigherScoreNoticeKey] = useState(0);
 
   const initialFinalDelta = useMemo(
-    () => buildPercentDelta(finalScore, initialFinalScore),
-    [finalScore, initialFinalScore],
+    () => buildPercentDelta(currentFinalScore, initialFinalScore),
+    [currentFinalScore, initialFinalScore],
   );
 
   const previousFinalDelta = useMemo(
-    () => buildPercentDelta(finalScore, previousFinalScore),
-    [finalScore, previousFinalScore],
+    () => buildPercentDelta(currentFinalScore, previousFinalScore),
+    [currentFinalScore, previousFinalScore],
   );
 
   const clearHighlights = () => {
     onRuleClick([]);
     onLlmCodeBlocksFocus([]);
+  };
+
+  const closeFirstAcceptedNotice = useCallback(() => {
+    setShowFirstAcceptedNotice(false);
+  }, []);
+
+  const closeHighestScoreNotice = useCallback(() => {
+    setShowHighestScoreNotice(false);
+  }, []);
+
+  const closeHigherScoreNotice = useCallback(() => {
+    setShowHigherScoreNotice(false);
+  }, []);
+
+  const openSubmissionNotices = (submissionStatus: SubmissionStatus[]) => {
+    if (submissionStatus.includes("FIRST_ACCEPTED_SUBMISSION")) {
+      setFirstAcceptedNoticeKey((previous) => previous + 1);
+      setShowFirstAcceptedNotice(true);
+    }
+
+    if (submissionStatus.includes("HIGHEST_SCORE_SUBMISSION")) {
+      setHighestScoreNoticeKey((previous) => previous + 1);
+      setShowHighestScoreNotice(true);
+    }
+
+    if (submissionStatus.includes("HIGHER_SCORE_SUBMISSION")) {
+      setHigherScoreNoticeKey((previous) => previous + 1);
+      setShowHigherScoreNotice(true);
+    }
   };
 
   const handleCheckMeasurements = async (isHintCheck = false) => {
@@ -229,17 +267,23 @@ export function StatsPanel({
 
       const mappedIssues = mapSonarIssues(data);
       const nextGroupScores = buildGroupScoresFromIssues(mappedIssues);
+      const { finalScore: responseFinalScore, submissionStatus } =
+        getAnalysisMeta(data);
+      const nextFinalScore =
+        responseFinalScore ?? calculateFinalScoreFromGroups(nextGroupScores);
 
       setPreviousGroupScores(groupScores);
-      setPreviousFinalScore(finalScore);
+      setPreviousFinalScore(currentFinalScore);
 
       setGroupScores(nextGroupScores);
+      setCurrentFinalScore(nextFinalScore);
       setAnalysedIssues(mappedIssues);
 
       if (!isHintCheck) {
         onRuleClick([]);
       }
 
+      openSubmissionNotices(submissionStatus);
       return mappedIssues;
     } catch (error) {
       console.error("Failed to check measurements", error);
@@ -288,6 +332,30 @@ export function StatsPanel({
     <section className="panelShell">
       <div className="panelTitle">Stats</div>
       <div className="statsContent">
+        {showFirstAcceptedNotice ? (
+          <FirstAcceptedSubmissionNotice
+            key={firstAcceptedNoticeKey}
+            onClose={closeFirstAcceptedNotice}
+          />
+        ) : null}
+
+        {showHighestScoreNotice ? (
+          <FirstAcceptedSubmissionNotice
+            key={highestScoreNoticeKey}
+            variant="highestScore"
+            onClose={closeHighestScoreNotice}
+          />
+        ) : null}
+
+        {showHigherScoreNotice ? (
+          <HigherScoreSubmissionNotice
+            key={higherScoreNoticeKey}
+            initialDelta={initialFinalDelta}
+            previousDelta={previousFinalDelta}
+            onClose={closeHigherScoreNotice}
+          />
+        ) : null}
+
         {fatalMessage ? (
           <>
             <div className="statsFatalTitle">Fatal</div>
@@ -306,7 +374,7 @@ export function StatsPanel({
         ) : (
           <>
             <FinalScoreCard
-              finalScore={finalScore}
+              finalScore={currentFinalScore}
               initialDelta={initialFinalDelta}
               previousDelta={previousFinalDelta}
             />
@@ -372,7 +440,7 @@ export function StatsPanel({
 
         {!testsFailedPayload ? (
           <button type="button" onClick={handleRecheckAndHint}>
-            Recheck & Hint
+            Hint
           </button>
         ) : null}
       </div>

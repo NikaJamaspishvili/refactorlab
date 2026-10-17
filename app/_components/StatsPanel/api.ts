@@ -1,4 +1,8 @@
-import type { SonarIssue, SonarIssuesResponse } from "./types";
+import type {
+  SonarIssue,
+  SonarIssuesResponse,
+  SubmissionStatus,
+} from "./types";
 type AnalyseResponse = {
   status: number;
   data: unknown;
@@ -39,7 +43,7 @@ export async function requestLlmHelp(
     body: JSON.stringify(payload),
   });
 
-  const data = (await response.json()) as { STATUS: string; response: any };
+  const data = (await response.json()) as { STATUS: string; response: unknown };
 
   return data.response;
 }
@@ -58,6 +62,34 @@ export function mapSonarIssues(input: unknown): SonarIssuesResponse {
   }
 
   return mappedIssues;
+}
+
+export function getAnalysisMeta(input: unknown): {
+  finalScore?: number;
+  submissionStatus: SubmissionStatus[];
+} {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    return { submissionStatus: [] };
+  }
+
+  const finalScore =
+    "finalScore" in input && typeof input.finalScore === "number"
+      ? input.finalScore
+      : undefined;
+
+  const rawStatuses =
+    "submissionStatus" in input && Array.isArray(input.submissionStatus)
+      ? input.submissionStatus
+      : [];
+
+  const submissionStatus = rawStatuses.filter(
+    (status): status is SubmissionStatus =>
+      status === "FIRST_ACCEPTED_SUBMISSION" ||
+      status === "HIGHER_SCORE_SUBMISSION" ||
+      status === "HIGHEST_SCORE_SUBMISSION",
+  );
+
+  return { finalScore, submissionStatus };
 }
 
 function isSonarIssue(value: unknown): value is SonarIssue {

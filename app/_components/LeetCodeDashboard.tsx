@@ -5,6 +5,7 @@ import Exercises from "@/exercises.json";
 import { CodeEditorPanel } from "./CodeEditorPanel";
 import { StatsPanel } from "./StatsPanel";
 import styles from "./LeetCodeDashboard.module.css";
+import type { QueryInitialExerciseData } from "../api/analyse/DbLogic";
 
 type HighlightPosition = {
   line: number;
@@ -28,13 +29,20 @@ type LlmPointerCardPayload = {
   showNavigation?: boolean;
 };
 
-export function LeetCodeDashboard() {
-  const exercise = Exercises["2"];
-  const [code, setCode] = useState(exercise.code);
+export function LeetCodeDashboard({
+  initialData,
+}: {
+  initialData: QueryInitialExerciseData;
+}) {
+  const latestSubmission = initialData.latestSubmission as {
+    code: string;
+    sonarDetectedProblems: Record<string, unknown>;
+  };
+
+  const [code, setCode] = useState(latestSubmission.code);
   const [highlightedPositions, setHighlightedPositions] = useState<
     HighlightPosition[]
   >([]);
-  const [activeHint] = useState<LlmHint | null>(null);
   const [llmPointerCards, setLlmPointerCards] = useState<
     LlmPointerCardPayload[]
   >([]);
@@ -56,7 +64,7 @@ export function LeetCodeDashboard() {
             code={code}
             onCodeChange={setCode}
             highlightedPositions={highlightedPositions}
-            activeHint={activeHint}
+            activeHint={null}
             llmPointerCards={llmPointerCards}
             onLlmCodeBlocksFocus={setLlmPointerCards}
           />

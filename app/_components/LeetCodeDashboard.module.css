@@ -499,6 +499,141 @@
   gap: 6px;
 }
 
+:global(.statsSubmissionNotice) {
+  position: relative;
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid transparent;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+:global(.statsSubmissionNoticeGreen) {
+  background: linear-gradient(180deg, #123424 0%, #0f2a1e 100%);
+  border-color: #2d8c61;
+}
+
+:global(.statsSubmissionNoticeBlue) {
+  background: linear-gradient(180deg, #162d57 0%, #102241 100%);
+  border-color: #3e73c8;
+}
+
+:global(.statsSubmissionNoticePurple) {
+  background: linear-gradient(180deg, #3d1f63 0%, #2f174c 100%);
+  border-color: #8f5de8;
+}
+
+:global(.statsSubmissionTimerSvg) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+:global(.statsSubmissionTimerPath) {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: statsSubmissionCountdown var(--stats-submission-timeout, 10000ms)
+    linear forwards;
+}
+
+:global(.statsSubmissionTimerPathGreen) {
+  stroke: #6bf0a8;
+}
+
+:global(.statsSubmissionTimerPathBlue) {
+  stroke: #8ec6ff;
+}
+
+:global(.statsSubmissionTimerPathPurple) {
+  stroke: #c7a4ff;
+}
+
+:global(.statsSubmissionClose) {
+  align-self: flex-end;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4f7ff;
+  font-size: 12px;
+  padding: 2px 8px;
+  cursor: pointer;
+  z-index: 1;
+}
+
+:global(.statsSubmissionTitle) {
+  color: #f4f7ff;
+  font-size: 14px;
+  font-weight: 700;
+  z-index: 1;
+}
+
+:global(.statsSubmissionText) {
+  color: #d6e8df;
+  font-size: 12px;
+  line-height: 1.45;
+  z-index: 1;
+}
+
+:global(.statsSubmissionAction) {
+  width: fit-content;
+  border: 1px solid;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 1;
+}
+
+:global(.statsSubmissionActionGreen) {
+  border-color: #58d799;
+  background: rgba(88, 215, 153, 0.18);
+  color: #e8fff4;
+}
+
+:global(.statsSubmissionActionPurple) {
+  border-color: #b387ff;
+  background: rgba(179, 135, 255, 0.2);
+  color: #f3eaff;
+}
+
+:global(.statsSubmissionBigMetrics) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  z-index: 1;
+}
+
+:global(.statsSubmissionMetricCard) {
+  border: 1px solid rgba(140, 191, 255, 0.35);
+  border-radius: 8px;
+  background: rgba(8, 18, 36, 0.35);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+:global(.statsSubmissionMetricLabel) {
+  color: #c5d9ff;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+:global(.statsSubmissionMetricValue) {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+
 :global(.statsSubmitFeedback) {
   border-radius: 10px;
   padding: 10px 12px;
@@ -585,6 +720,16 @@
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes statsSubmissionCountdown {
+  from {
+    stroke-dashoffset: 100;
+  }
+
+  to {
+    stroke-dashoffset: 0;
   }
 }
 

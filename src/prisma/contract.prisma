@@ -40,6 +40,9 @@ model Submissions {
   exerciseId              Int
   score                   Int
   count                   Int
+  latestSubmission        Json
+  createdAt               temporal.createdAtString()
+  updatedAt               temporal.updatedAtString()
 
   user                  Account   @relation(fields: [userId], references: [id])
   exercise              Exercises @relation(fields: [exerciseId], references: [id])

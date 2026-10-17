@@ -282,6 +282,13 @@
                   "kind": "scalar"
                 }
               },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "exerciseId": {
                 "nullable": false,
                 "type": {
@@ -289,10 +296,24 @@
                   "kind": "scalar"
                 }
               },
+              "latestSubmission": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/json@1",
+                  "kind": "scalar"
+                }
+              },
               "score": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
                   "kind": "scalar"
                 }
               },
@@ -343,11 +364,20 @@
                 "count": {
                   "column": "count"
                 },
+                "createdAt": {
+                  "column": "createdAt"
+                },
                 "exerciseId": {
                   "column": "exerciseId"
                 },
+                "latestSubmission": {
+                  "column": "latestSubmission"
+                },
                 "score": {
                   "column": "score"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
                 },
                 "userId": {
                   "column": "userId"
@@ -517,14 +547,29 @@
                   "dataType": "pg/int4",
                   "nullable": false
                 },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false
+                },
                 "exerciseId": {
                   "codecId": "pg/int4@1",
                   "dataType": "pg/int4",
                   "nullable": false
                 },
+                "latestSubmission": {
+                  "codecId": "pg/json@1",
+                  "dataType": "pg/json",
+                  "nullable": false
+                },
                 "score": {
                   "codecId": "pg/int4@1",
                   "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
                   "nullable": false
                 },
                 "userId": {
@@ -623,10 +668,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "6ce89b272e30ece1cd69845ae34cda1f603a3bc0a0b15ee3657bc7a4b75e6da2"
+    "storageHash": "79645efed5ed4564f89153d5f6952050809293aebf296a0c14ff6217fd8c5b8c"
   },
   "execution": {
-    "executionHash": "8eac17e7fd1443406e86cdbb7207e76d0c3bfe54d448c5bdd364379ae86f1675",
+    "executionHash": "3a804cbae798b6a5a8304c6a73027a6b220f85068c3ec0a05c6e4dda2f45af32",
     "mutations": {
       "defaults": [
         {
@@ -651,6 +696,32 @@
           },
           "ref": {
             "entry": "Account",
+            "field": "updatedAt",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "Submissions",
+            "field": "createdAt",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "Submissions",
             "field": "updatedAt",
             "namespace": "public"
           }
