@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import type { CSSProperties } from "react";
 import type { ChangeDirection } from "../types";
 import { SUBMISSION_NOTICE_TIMEOUT_MS } from "../constants";
 
@@ -21,10 +20,6 @@ export function HigherScoreSubmissionNotice({
   previousDelta,
   onClose,
 }: HigherScoreSubmissionNoticeProps) {
-  const countdownStyle: CSSProperties = {
-    "--stats-submission-timeout": `${SUBMISSION_NOTICE_TIMEOUT_MS}ms`,
-  } as CSSProperties;
-
   useEffect(() => {
     const timeoutId = window.setTimeout(onClose, SUBMISSION_NOTICE_TIMEOUT_MS);
 
@@ -34,19 +29,7 @@ export function HigherScoreSubmissionNotice({
   }, [onClose]);
 
   return (
-    <div className="statsSubmissionNotice statsSubmissionNoticeBlue" style={countdownStyle}>
-      <svg className="statsSubmissionTimerSvg" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <rect
-          x="1.5"
-          y="1.5"
-          width="97"
-          height="97"
-          rx="10"
-          ry="10"
-          pathLength="100"
-          className="statsSubmissionTimerPath statsSubmissionTimerPathBlue"
-        />
-      </svg>
+    <div className="statsSubmissionNotice statsSubmissionNoticeBlue">
 
       <button className="statsSubmissionClose" type="button" onClick={onClose}>
         X

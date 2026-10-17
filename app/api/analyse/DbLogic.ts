@@ -7,6 +7,7 @@ export const submissionInformation = async (
   currentScore: number,
   code: string,
   sonarDetectedProblems: Record<string, string>,
+  isHint: boolean,
 ) => {
   console.info(currentScore);
   const scoreSelectPlan = db.sql.public.Submissions.select("score")
@@ -27,7 +28,7 @@ export const submissionInformation = async (
   let STATUS = [];
 
   if (
-    (result === undefined || result.score < VALID_ACCEPTED_SCORE) &&
+    (result === undefined || result?.score < VALID_ACCEPTED_SCORE) &&
     currentScore >= VALID_ACCEPTED_SCORE
   ) {
     STATUS.push("FIRST_ACCEPTED_SUBMISSION");
@@ -36,7 +37,7 @@ export const submissionInformation = async (
 
   if (
     currentScore === 100 &&
-    (currentScore > result.score || result === null)
+    (currentScore > result?.score || result === null)
   ) {
     STATUS.push("HIGHEST_SCORE_SUBMISSION");
     console.info("HIGHEST SCORE SUBMISSION DETECTED");
@@ -49,6 +50,7 @@ export const submissionInformation = async (
       score: currentScore,
       count: 1,
       latestSubmission,
+      hintCount: isHint ? 1 : 0,
     });
     console.info(
       "NO PREVIOUS SUBMISSION DETECTED, INSERTING BRAND NEW SUBMISSION",
@@ -76,21 +78,24 @@ export const queryInitialExerciseData = async (
   exerciseId: number,
   userId: string,
 ) => {
-  let plan = db.sql.public.Submissions.innerJoin(
-    db.sql.public.Exercises,
-    (f, fns) => fns.eq(f.Submissions.exerciseId, f.Exercises.id),
-  )
-    .innerJoin(db.sql.public.Account, (f, fns) =>
-      fns.eq(f.Submissions.userId, f.Account.id),
-    )
-    .select("latestSubmission", "description", "title", "difficulty")
-    .select("initialCode", (f) => f.code)
-    .where((f, { eq, and }) =>
+  const plan = db.sql.public.Exercises.outerLeftJoin(
+    db.sql.public.Submissions,
+    (f, { eq, and }) =>
       and(
-        eq(f.Submissions.exerciseId, exerciseId),
+        eq(f.Submissions.exerciseId, f.Exercises.id),
         eq(f.Submissions.userId, userId),
       ),
+  )
+    .select(
+      "latestSubmission",
+      "description",
+      "title",
+      "difficulty",
+      "initialData",
+      "hintCount",
+      "score",
     )
+    .where((f, { eq }) => eq(f.Exercises.id, exerciseId))
     .build();
 
   const [result] = await db.runtime().query(plan);
@@ -101,3 +106,23 @@ export const queryInitialExerciseData = async (
 export type QueryInitialExerciseData = Awaited<
   ReturnType<typeof queryInitialExerciseData>
 >;
+
+export const findHintCount = async (userId: string, exerciseId: number) => {
+  return await db.orm.public.Submissions.select("hintCount")
+    .where({
+      exerciseId: exerciseId,
+      userId: userId,
+    })
+    .first();
+};
+
+export const updateHintCount = async (
+  userId: string,
+  exerciseId: number,
+  hintCount: number,
+) => {
+  return await db.orm.public.Submissions.where({
+    userId,
+    exerciseId,
+  }).update({ hintCount });
+};

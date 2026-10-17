@@ -18,7 +18,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'79645efed5ed4564f89153d5f6952050809293aebf296a0c14ff6217fd8c5b8c'>;
+  StorageHashBase<'bc1d9e2d71bc42af177d6d0ad0eb61d6f28f92fc5aecd30d90e1de9346ecf11c'>;
 export type ExecutionHash =
   ExecutionHashBase<'3a804cbae798b6a5a8304c6a73027a6b220f85068c3ec0a05c6e4dda2f45af32'>;
 export type ProfileHash =
@@ -245,10 +245,10 @@ export type FieldOutputTypes = {
     };
     readonly Exercises: {
       readonly HotLines: CodecTypes['pg/text@1']['output'];
-      readonly code: CodecTypes['pg/text@1']['output'];
       readonly description: CodecTypes['pg/text@1']['output'];
       readonly difficulty: 'EASY' | 'NORMAL' | 'HARD';
       readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly initialData: CodecTypes['pg/json@1']['output'];
       readonly mainFunctionName: CodecTypes['pg/text@1']['output'];
       readonly tests: CodecTypes['pg/json@1']['output'];
       readonly title: CodecTypes['pg/text@1']['output'];
@@ -257,6 +257,7 @@ export type FieldOutputTypes = {
       readonly count: CodecTypes['pg/int4@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly exerciseId: CodecTypes['pg/int4@1']['output'];
+      readonly hintCount: CodecTypes['pg/int4@1']['output'];
       readonly latestSubmission: CodecTypes['pg/json@1']['output'];
       readonly score: CodecTypes['pg/int4@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -277,10 +278,10 @@ export type FieldInputTypes = {
     };
     readonly Exercises: {
       readonly HotLines: CodecTypes['pg/text@1']['input'];
-      readonly code: CodecTypes['pg/text@1']['input'];
       readonly description: CodecTypes['pg/text@1']['input'];
       readonly difficulty: 'EASY' | 'NORMAL' | 'HARD';
       readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly initialData: CodecTypes['pg/json@1']['input'];
       readonly mainFunctionName: CodecTypes['pg/text@1']['input'];
       readonly tests: CodecTypes['pg/json@1']['input'];
       readonly title: CodecTypes['pg/text@1']['input'];
@@ -289,6 +290,7 @@ export type FieldInputTypes = {
       readonly count: CodecTypes['pg/int4@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly exerciseId: CodecTypes['pg/int4@1']['input'];
+      readonly hintCount: CodecTypes['pg/int4@1']['input'];
       readonly latestSubmission: CodecTypes['pg/json@1']['input'];
       readonly score: CodecTypes['pg/int4@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -308,11 +310,11 @@ export type StorageColumnTypes = {
       readonly username: CodecTypes['pg/text@1']['output'];
     };
     readonly Exercises: {
-      readonly code: CodecTypes['pg/text@1']['output'];
       readonly description: CodecTypes['pg/text@1']['output'];
       readonly difficulty: 'EASY' | 'NORMAL' | 'HARD';
       readonly HotLines: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly initialData: CodecTypes['pg/json@1']['output'];
       readonly mainFunctionName: CodecTypes['pg/text@1']['output'];
       readonly tests: CodecTypes['pg/json@1']['output'];
       readonly title: CodecTypes['pg/text@1']['output'];
@@ -321,6 +323,7 @@ export type StorageColumnTypes = {
       readonly count: CodecTypes['pg/int4@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly exerciseId: CodecTypes['pg/int4@1']['output'];
+      readonly hintCount: CodecTypes['pg/int4@1']['output'];
       readonly latestSubmission: CodecTypes['pg/json@1']['output'];
       readonly score: CodecTypes['pg/int4@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -340,11 +343,11 @@ export type StorageColumnInputTypes = {
       readonly username: CodecTypes['pg/text@1']['input'];
     };
     readonly Exercises: {
-      readonly code: CodecTypes['pg/text@1']['input'];
       readonly description: CodecTypes['pg/text@1']['input'];
       readonly difficulty: 'EASY' | 'NORMAL' | 'HARD';
       readonly HotLines: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly initialData: CodecTypes['pg/json@1']['input'];
       readonly mainFunctionName: CodecTypes['pg/text@1']['input'];
       readonly tests: CodecTypes['pg/json@1']['input'];
       readonly title: CodecTypes['pg/text@1']['input'];
@@ -353,6 +356,7 @@ export type StorageColumnInputTypes = {
       readonly count: CodecTypes['pg/int4@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly exerciseId: CodecTypes['pg/int4@1']['input'];
+      readonly hintCount: CodecTypes['pg/int4@1']['input'];
       readonly latestSubmission: CodecTypes['pg/json@1']['input'];
       readonly score: CodecTypes['pg/int4@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -375,10 +379,10 @@ export namespace Models {
   };
   export type public_Exercises = {
     HotLines: CodecTypes['pg/text@1']['output'];
-    code: CodecTypes['pg/text@1']['output'];
     description: CodecTypes['pg/text@1']['output'];
     difficulty: 'EASY' | 'NORMAL' | 'HARD';
     id: CodecTypes['pg/int4@1']['output'];
+    initialData: CodecTypes['pg/json@1']['output'];
     mainFunctionName: CodecTypes['pg/text@1']['output'];
     tests: CodecTypes['pg/json@1']['output'];
     title: CodecTypes['pg/text@1']['output'];
@@ -389,6 +393,7 @@ export namespace Models {
     count: CodecTypes['pg/int4@1']['output'];
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     exerciseId: CodecTypes['pg/int4@1']['output'];
+    hintCount: CodecTypes['pg/int4@1']['output'];
     latestSubmission: CodecTypes['pg/json@1']['output'];
     score: CodecTypes['pg/int4@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -487,12 +492,6 @@ type ContractBase = Omit<
                   readonly nullable: false;
                   readonly many: false;
                 };
-                readonly code: {
-                  readonly dataType: 'pg/text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly many: false;
-                };
                 readonly description: {
                   readonly dataType: 'pg/text';
                   readonly codecId: 'pg/text@1';
@@ -513,6 +512,12 @@ type ContractBase = Omit<
                     readonly kind: 'function';
                     readonly expression: 'autoincrement()';
                   };
+                  readonly many: false;
+                };
+                readonly initialData: {
+                  readonly dataType: 'pg/json';
+                  readonly codecId: 'pg/json@1';
+                  readonly nullable: false;
                   readonly many: false;
                 };
                 readonly mainFunctionName: {
@@ -554,6 +559,12 @@ type ContractBase = Omit<
                   readonly many: false;
                 };
                 readonly exerciseId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly hintCount: {
                   readonly dataType: 'pg/int4';
                   readonly codecId: 'pg/int4@1';
                   readonly nullable: false;
@@ -729,10 +740,6 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly code: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
               readonly description: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -744,6 +751,10 @@ type ContractBase = Omit<
               readonly id: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly initialData: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/json@1' };
               };
               readonly mainFunctionName: {
                 readonly nullable: false;
@@ -776,10 +787,10 @@ type ContractBase = Omit<
               readonly namespaceId: 'public';
               readonly fields: {
                 readonly HotLines: { readonly column: 'HotLines' };
-                readonly code: { readonly column: 'code' };
                 readonly description: { readonly column: 'description' };
                 readonly difficulty: { readonly column: 'difficulty' };
                 readonly id: { readonly column: 'id' };
+                readonly initialData: { readonly column: 'initialData' };
                 readonly mainFunctionName: { readonly column: 'mainFunctionName' };
                 readonly tests: { readonly column: 'tests' };
                 readonly title: { readonly column: 'title' };
@@ -800,6 +811,10 @@ type ContractBase = Omit<
                 };
               };
               readonly exerciseId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly hintCount: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
@@ -856,6 +871,7 @@ type ContractBase = Omit<
                 readonly count: { readonly column: 'count' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly exerciseId: { readonly column: 'exerciseId' };
+                readonly hintCount: { readonly column: 'hintCount' };
                 readonly latestSubmission: { readonly column: 'latestSubmission' };
                 readonly score: { readonly column: 'score' };
                 readonly updatedAt: { readonly column: 'updatedAt' };

@@ -23,6 +23,7 @@ import type {
   SonarIssuesResponse,
   SubmissionStatus,
 } from "./types";
+import { MAX_HINT_COUNT } from "@/app/common";
 
 type PointerCard = {
   startLine: number;
@@ -33,7 +34,10 @@ type PointerCard = {
 
 type StatsPanelProps = {
   code: string;
-  initialScoring: Record<string, number>;
+  exerciseId: number;
+  initialDetectedProblems: Record<string, unknown> | null;
+  hintCount: number;
+  highestScore: number | null;
   onRuleClick: (positions: SonarIssuePosition[]) => void;
   onLlmCodeBlocksFocus: (payload: PointerCard[]) => void;
 };
@@ -53,17 +57,6 @@ function buildDefaultGroupScores() {
   return Object.fromEntries(
     STATIC_GROUP_NAMES.map((group) => [group, 100]),
   ) as Record<string, number>;
-}
-
-function buildGroupScoresFromInitialScoring(scoring: Record<string, number>) {
-  const scores = buildDefaultGroupScores();
-
-  for (const group of STATIC_GROUP_NAMES) {
-    const deduction = typeof scoring[group] === "number" ? scoring[group] : 0;
-    scores[group] = roundToOneDecimal(Math.max(0, 100 - deduction));
-  }
-
-  return scores;
 }
 
 function buildGroupScoresFromIssues(issues: SonarIssuesResponse) {
@@ -139,39 +132,63 @@ function isFatalResponse(status: number, data: unknown): boolean {
 
 export function StatsPanel({
   code,
-  initialScoring,
+  exerciseId,
+  initialDetectedProblems,
+  hintCount,
+  highestScore: personalHighestScore,
   onRuleClick,
   onLlmCodeBlocksFocus,
 }: StatsPanelProps) {
-  const baselineGroupScores = useMemo(
-    () => buildGroupScoresFromInitialScoring(initialScoring),
-    [initialScoring],
+  const baselineGroupScores = useMemo(() => buildDefaultGroupScores(), []);
+
+  const hydratedInitialIssues = useMemo(
+    () => mapSonarIssues(initialDetectedProblems),
+    [initialDetectedProblems],
   );
 
-  const baselineFinalScore = useMemo(
-    () => calculateFinalScoreFromGroups(baselineGroupScores),
-    [baselineGroupScores],
-  );
+  const hydratedInitialGroupScores = useMemo(() => {
+    if (Object.keys(hydratedInitialIssues).length === 0) {
+      return baselineGroupScores;
+    }
+
+    return buildGroupScoresFromIssues(hydratedInitialIssues);
+  }, [baselineGroupScores, hydratedInitialIssues]);
+
+  const hydratedInitialFinalScore = useMemo(() => {
+    const meta = getAnalysisMeta(initialDetectedProblems);
+
+    return (
+      meta.finalScore ??
+      calculateFinalScoreFromGroups(hydratedInitialGroupScores)
+    );
+  }, [hydratedInitialGroupScores, initialDetectedProblems]);
 
   const [isChecking, setIsChecking] = useState(false);
   const [showAIHelpBtn, setShowAIHelpBtn] = useState(true);
 
-  const [analysedIssues, setAnalysedIssues] = useState<SonarIssuesResponse>({});
-  const [groupScores, setGroupScores] =
-    useState<Record<string, number>>(baselineGroupScores);
-  const [initialGroupScores] =
-    useState<Record<string, number>>(baselineGroupScores);
+  const [analysedIssues, setAnalysedIssues] = useState<SonarIssuesResponse>(
+    hydratedInitialIssues,
+  );
+  const [groupScores, setGroupScores] = useState<Record<string, number>>(
+    hydratedInitialGroupScores,
+  );
+  const [initialGroupScores] = useState<Record<string, number>>(
+    hydratedInitialGroupScores,
+  );
   const [previousGroupScores, setPreviousGroupScores] = useState<Record<
     string,
     number
   > | null>(null);
 
-  const [currentFinalScore, setCurrentFinalScore] =
-    useState<number>(baselineFinalScore);
-  const [initialFinalScore] = useState<number>(baselineFinalScore);
+  const [currentFinalScore, setCurrentFinalScore] = useState<number>(
+    hydratedInitialFinalScore,
+  );
+  const [initialFinalScore] = useState<number>(hydratedInitialFinalScore);
   const [previousFinalScore, setPreviousFinalScore] = useState<number>();
 
-  const [lastCheckedCode, setLastCheckedCode] = useState<string | null>(null);
+  const [lastCheckedCode, setLastCheckedCode] = useState<string | null>(() =>
+    initialDetectedProblems ? code : null,
+  );
 
   const [fatalMessage, setFatalMessage] = useState("");
   const [testsFailedPayload, setTestsFailedPayload] =
@@ -183,7 +200,7 @@ export function StatsPanel({
   const [showHigherScoreNotice, setShowHigherScoreNotice] = useState(false);
   const [firstAcceptedNoticeKey, setFirstAcceptedNoticeKey] = useState(0);
   const [highestScoreNoticeKey, setHighestScoreNoticeKey] = useState(0);
-  const [higherScoreNoticeKey, setHigherScoreNoticeKey] = useState(0);
+  const [hintCountState, setHintCount] = useState(MAX_HINT_COUNT - hintCount);
 
   const initialFinalDelta = useMemo(
     () => buildPercentDelta(currentFinalScore, initialFinalScore),
@@ -224,7 +241,6 @@ export function StatsPanel({
     }
 
     if (submissionStatus.includes("HIGHER_SCORE_SUBMISSION")) {
-      setHigherScoreNoticeKey((previous) => previous + 1);
       setShowHigherScoreNotice(true);
     }
   };
@@ -239,7 +255,11 @@ export function StatsPanel({
     setIsChecking(true);
 
     try {
-      const { status, data } = await analyseCode(code);
+      const { status, data } = await analyseCode(code, {
+        exerciseId,
+        isHint: isHintCheck,
+      });
+      if (isHintCheck) setHintCount(MAX_HINT_COUNT - (data as any).hintCount);
       setLastCheckedCode(code);
 
       if (isFatalResponse(status, data)) {
@@ -314,7 +334,6 @@ export function StatsPanel({
 
   const handleRecheckAndHint = async (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
-
     const isCodeUnchanged =
       lastCheckedCode !== null && lastCheckedCode === code;
     if (isCodeUnchanged) {
@@ -349,7 +368,6 @@ export function StatsPanel({
 
         {showHigherScoreNotice ? (
           <HigherScoreSubmissionNotice
-            key={higherScoreNoticeKey}
             initialDelta={initialFinalDelta}
             previousDelta={previousFinalDelta}
             onClose={closeHigherScoreNotice}
@@ -376,6 +394,7 @@ export function StatsPanel({
             <FinalScoreCard
               finalScore={currentFinalScore}
               initialDelta={initialFinalDelta}
+              personalHighestScore={personalHighestScore}
               previousDelta={previousFinalDelta}
             />
 
@@ -438,11 +457,17 @@ export function StatsPanel({
           {isChecking ? "Submitting..." : "Submit"}
         </button>
 
-        {!testsFailedPayload ? (
-          <button type="button" onClick={handleRecheckAndHint}>
-            Hint
+        {!testsFailedPayload && currentFinalScore !== 100 && (
+          <button
+            type="button"
+            disabled={hintCountState === 0}
+            onClick={handleRecheckAndHint}
+          >
+            {hintCountState === 0
+              ? `Hint exhausted`
+              : `Hint: ${hintCountState} remaining`}
           </button>
-        ) : null}
+        )}
       </div>
     </section>
   );

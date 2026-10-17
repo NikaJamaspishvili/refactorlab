@@ -1,3 +1,5 @@
+"use server";
+
 import { LeetCodeDashboard } from "@/app/_components/LeetCodeDashboard";
 import { queryInitialExerciseData } from "@/app/api/analyse/DbLogic";
 import { auth } from "@/auth";
@@ -13,7 +15,12 @@ const page = async ({ params }: { params: Params }) => {
     userSession.userId,
   );
 
-  return <LeetCodeDashboard initialData={initialData} />;
+  return (
+    <LeetCodeDashboard
+      initialData={initialData}
+      exerciseId={Number(exerciseId)}
+    />
+  );
 };
 
 export default page;

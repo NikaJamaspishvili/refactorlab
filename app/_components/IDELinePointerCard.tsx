@@ -13,7 +13,7 @@ type IDELinePointerCardProps = {
 function IDELinePointerCard({
   content,
   title = "Code Hint",
-  avatarSrc = "HoodieGuy.jpeg",
+  avatarSrc = "/HoodieGuy.jpeg",
   footer,
   onClose,
   pointerSide = "bottom",

@@ -6,7 +6,12 @@ import fs from "node:fs/promises";
 import { RunTests } from "./runtests";
 import EXERCISES from "@/exercises.json";
 import { getOutputAffectingLines } from "../../_tools/output_affecting_lines";
-import { submissionInformation } from "./DbLogic";
+import {
+  findHintCount,
+  submissionInformation,
+  updateHintCount,
+} from "./DbLogic";
+import { MAX_HINT_COUNT } from "../../common";
 
 import { auth } from "@/auth";
 
@@ -15,9 +20,9 @@ export async function POST(request) {
   const userSession = session?.user;
   const userId = userSession.userId;
 
-  const { code, exerciseId } = await request.json();
+  const { code, exerciseId, isHint } = await request.json();
 
-  const exerciseContext = EXERCISES[exerciseId];
+  const exerciseContext = EXERCISES[String(exerciseId)];
   const tmpFilePath = await withTempCodeFile(code);
 
   try {
@@ -60,15 +65,23 @@ export async function POST(request) {
 
     const STATUS = await submissionInformation(
       userId,
-      Number(exerciseId),
+      exerciseId,
       eslint_res.finalScore,
       code,
       eslint_res,
+      isHint,
     );
     eslint_res.submissionStatus = STATUS;
 
-    console.info(eslint_res.submissionStatus);
-
+    if (isHint) {
+      const { hintCount } = await findHintCount(userId, exerciseId);
+      if (hintCount >= MAX_HINT_COUNT) {
+        throw new Error("HINTS LIMIT IS UP!");
+      } else {
+        updateHintCount(userId, exerciseId, hintCount + 1);
+        eslint_res.hintCount = hintCount + 1;
+      }
+    }
     return Response.json(eslint_res, { status: 200 });
   } catch (error) {
     throw new Error(error);

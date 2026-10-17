@@ -25,12 +25,12 @@ model Account {
 
 model Exercises {
   id                      Int       @id @default(autoincrement())
-  code                    String
   title                   String
   description             String
   mainFunctionName        String
   tests                   Json
   HotLines                String
+  initialData             Json
   difficulty              EXERCISEDIFFICULTY
   submissions             Submissions[]
 }
@@ -43,6 +43,7 @@ model Submissions {
   latestSubmission        Json
   createdAt               temporal.createdAtString()
   updatedAt               temporal.updatedAtString()
+  hintCount               Int
 
   user                  Account   @relation(fields: [userId], references: [id])
   exercise              Exercises @relation(fields: [exerciseId], references: [id])

@@ -8,13 +8,25 @@ type AnalyseResponse = {
   data: unknown;
 };
 
-export async function analyseCode(code: string): Promise<AnalyseResponse> {
+type AnalyseCodeOptions = {
+  isHint?: boolean;
+  exerciseId: number;
+};
+
+export async function analyseCode(
+  code: string,
+  options: AnalyseCodeOptions,
+): Promise<AnalyseResponse> {
   const response = await fetch("http://localhost:3000/api/analyse", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ code, exerciseId: "2" }),
+    body: JSON.stringify({
+      code,
+      exerciseId: options.exerciseId,
+      isHint: options.isHint,
+    }),
   });
   const data = (await response.json()) as unknown;
   return {

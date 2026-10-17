@@ -169,13 +169,6 @@
                   "kind": "scalar"
                 }
               },
-              "code": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
               "description": {
                 "nullable": false,
                 "type": {
@@ -200,6 +193,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "initialData": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/json@1",
                   "kind": "scalar"
                 }
               },
@@ -247,9 +247,6 @@
                 "HotLines": {
                   "column": "HotLines"
                 },
-                "code": {
-                  "column": "code"
-                },
                 "description": {
                   "column": "description"
                 },
@@ -258,6 +255,9 @@
                 },
                 "id": {
                   "column": "id"
+                },
+                "initialData": {
+                  "column": "initialData"
                 },
                 "mainFunctionName": {
                   "column": "mainFunctionName"
@@ -290,6 +290,13 @@
                 }
               },
               "exerciseId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "hintCount": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/int4@1",
@@ -369,6 +376,9 @@
                 },
                 "exerciseId": {
                   "column": "exerciseId"
+                },
+                "hintCount": {
+                  "column": "hintCount"
                 },
                 "latestSubmission": {
                   "column": "latestSubmission"
@@ -485,11 +495,6 @@
                   "dataType": "pg/text",
                   "nullable": false
                 },
-                "code": {
-                  "codecId": "pg/text@1",
-                  "dataType": "pg/text",
-                  "nullable": false
-                },
                 "description": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
@@ -513,6 +518,11 @@
                     "expression": "autoincrement()",
                     "kind": "function"
                   },
+                  "nullable": false
+                },
+                "initialData": {
+                  "codecId": "pg/json@1",
+                  "dataType": "pg/json",
                   "nullable": false
                 },
                 "mainFunctionName": {
@@ -553,6 +563,11 @@
                   "nullable": false
                 },
                 "exerciseId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "hintCount": {
                   "codecId": "pg/int4@1",
                   "dataType": "pg/int4",
                   "nullable": false
@@ -668,7 +683,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "79645efed5ed4564f89153d5f6952050809293aebf296a0c14ff6217fd8c5b8c"
+    "storageHash": "bc1d9e2d71bc42af177d6d0ad0eb61d6f28f92fc5aecd30d90e1de9346ecf11c"
   },
   "execution": {
     "executionHash": "3a804cbae798b6a5a8304c6a73027a6b220f85068c3ec0a05c6e4dda2f45af32",

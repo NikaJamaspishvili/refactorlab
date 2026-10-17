@@ -1,25 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import Exercises from "@/exercises.json";
 import { CodeEditorPanel } from "./CodeEditorPanel";
 import { StatsPanel } from "./StatsPanel";
 import styles from "./LeetCodeDashboard.module.css";
 import type { QueryInitialExerciseData } from "../api/analyse/DbLogic";
+import { MAX_HINT_COUNT } from "../common";
 
 type HighlightPosition = {
   line: number;
   column: number;
   endline?: number;
   endColumn?: number;
-};
-
-type LlmHint = {
-  startline: number;
-  endline: number;
-  hint_content: string;
-  solution: string;
-  correct_code: string;
 };
 
 type LlmPointerCardPayload = {
@@ -31,15 +23,24 @@ type LlmPointerCardPayload = {
 
 export function LeetCodeDashboard({
   initialData,
+  exerciseId,
 }: {
   initialData: QueryInitialExerciseData;
+  exerciseId: number;
 }) {
-  const latestSubmission = initialData.latestSubmission as {
+  const latestSubmission = (initialData?.latestSubmission ?? null) as {
     code: string;
-    sonarDetectedProblems: Record<string, unknown>;
+    sonarDetectedProblems: { finalScore: number } & Record<string, unknown>;
+  } | null;
+
+  const initialSubmission = initialData?.initialData as {
+    code: string;
+    sonarDetectedProblems: { finalScore: number } & Record<string, unknown>;
   };
 
-  const [code, setCode] = useState(latestSubmission.code);
+  const [code, setCode] = useState(
+    latestSubmission?.code ?? initialSubmission.code,
+  );
   const [highlightedPositions, setHighlightedPositions] = useState<
     HighlightPosition[]
   >([]);
@@ -54,9 +55,15 @@ export function LeetCodeDashboard({
         <div className={`${styles.panel} ${styles.textPanel}`}>
           <StatsPanel
             code={code}
-            initialScoring={exercise.scoring}
+            highestScore={initialData.score}
+            exerciseId={exerciseId}
+            initialDetectedProblems={
+              latestSubmission?.sonarDetectedProblems ??
+              initialSubmission.sonarDetectedProblems
+            }
             onRuleClick={setHighlightedPositions}
             onLlmCodeBlocksFocus={setLlmPointerCards}
+            hintCount={initialData.hintCount!}
           />
         </div>
         <div className={`${styles.panel} ${styles.editorPanel}`}>
