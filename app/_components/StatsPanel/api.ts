@@ -1,5 +1,4 @@
 import type { SonarIssue, SonarIssuesResponse } from "./types";
-
 type AnalyseResponse = {
   status: number;
   data: unknown;
@@ -13,9 +12,7 @@ export async function analyseCode(code: string): Promise<AnalyseResponse> {
     },
     body: JSON.stringify({ code, exerciseId: "2" }),
   });
-
   const data = (await response.json()) as unknown;
-
   return {
     status: response.status,
     data,

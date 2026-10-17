@@ -1,17 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { analyseCode, mapSonarIssues } from "./api";
 import {
   buildBaselineDelta,
   buildExpandedCategories,
   buildGroupedIssues,
-  buildSubmitFeedback,
   calculateCategoryScores,
   calculateFinalScore,
   isTestsFailedPayload,
   toIssueText,
 } from "./data";
+
 import { FinalScoreCard } from "./components/FinalScoreCard";
 import { GroupedIssuesSection } from "./components/GroupedIssuesSection";
 import { SubmitFeedbackBanner } from "./components/SubmitFeedbackBanner";
@@ -93,7 +93,11 @@ export function StatsPanel({
     onLlmCodeBlocksFocus([]);
   };
 
-  const handleCheckMeasurements = async () => {
+  useEffect(() => {
+    handleCheckMeasurements();
+  }, []);
+
+  const handleCheckMeasurements = async (isHint?: boolean) => {
     setIsChecking(true);
     try {
       const { status, data } = await analyseCode(code);
@@ -157,19 +161,20 @@ export function StatsPanel({
         setBaselineCategoryScores(nextCategoryScores);
       }
 
-      const nextFeedback = buildSubmitFeedback(
-        nextFinalScore,
-        previousFinalScore,
-      );
-      if (nextFeedback) {
-        setSubmitFeedback(nextFeedback);
-      }
+      // const nextFeedback = buildSubmitFeedback(
+      //   nextFinalScore,
+      //   previousFinalScore,
+      // );
+      // if (nextFeedback) {
+      //   setSubmitFeedback(nextFeedback);
+      // }
 
+      console.log("mappedIssues: ", mappedIssues);
       setPreviousFinalScore(nextFinalScore);
       setAnalysedIssues(mappedIssues);
       setSelectedRuleId(null);
       setRevealedHints({});
-      onRuleClick([]);
+      if (!isHint) onRuleClick([]);
       setExpandedCategories(buildExpandedCategories(mappedIssues));
     } catch (error) {
       console.error("Failed to check measurements", error);
@@ -211,6 +216,7 @@ export function StatsPanel({
               baselineDelta={baselineDelta}
             />
             <GroupedIssuesSection
+              handleCheckMeasurements={handleCheckMeasurements}
               groupedIssues={groupedIssues}
               expandedCategories={expandedCategories}
               selectedRuleId={selectedRuleId}
@@ -237,11 +243,38 @@ export function StatsPanel({
         <button
           className="statsActionButton"
           type="button"
-          onClick={handleCheckMeasurements}
+          onClick={() => handleCheckMeasurements}
           disabled={isChecking}
         >
           {isChecking ? "Checking..." : "Check measurements"}
         </button>
+
+        {!testsFailedPayload && (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleCheckMeasurements(true);
+              if (groupedIssues.length > 0) {
+                console.log(groupedIssues);
+                const startLine = groupedIssues[0].issues[0].positions[0].line;
+                const endLine = groupedIssues[0].issues[0].positions[0].endline;
+                const explanaition = groupedIssues[0].issues[0].message;
+                onLlmCodeBlocksFocus([
+                  {
+                    startLine: startLine,
+                    endLine: endLine || 0,
+                    content: explanaition,
+                  },
+                ]);
+              } else {
+                alert("ALL PROBLEMS HAVE BEEN SOLVED");
+              }
+            }}
+          >
+            Recheck & Hint
+          </button>
+        )}
       </div>
     </section>
   );

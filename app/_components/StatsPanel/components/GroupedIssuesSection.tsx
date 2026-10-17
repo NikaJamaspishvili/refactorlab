@@ -15,6 +15,7 @@ type GroupedIssuesSectionProps = {
   onToggleCategory: (category: string) => void;
   onRuleSelect: (ruleId: string) => void;
   onToggleHint: (ruleId: string) => void;
+  handleCheckMeasurements: () => void;
 };
 
 export function GroupedIssuesSection({
@@ -27,6 +28,7 @@ export function GroupedIssuesSection({
   onToggleCategory,
   onRuleSelect,
   onToggleHint,
+  handleCheckMeasurements,
 }: GroupedIssuesSectionProps) {
   if (groupedIssues.length === 0) {
     return (
@@ -131,15 +133,6 @@ export function GroupedIssuesSection({
                             {revealedHints[issue.ruleId]
                               ? "X"
                               : "General Actions"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              onRuleClick(toLineOnlyPositions(issue.positions));
-                            }}
-                          >
-                            Hint
                           </button>
                         </div>
                       </div>
