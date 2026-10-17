@@ -1,9 +1,5 @@
-import {
-  formatAtMostOneDecimal,
-  getCategoryDelta,
-  toLineOnlyPositions,
-} from "../data";
-import type { GroupedIssueCategory, SonarIssuePosition } from "../types";
+import { formatAtMostOneDecimal, getCategoryDelta } from "../data";
+import type { GroupedIssueCategory } from "../types";
 
 type GroupedIssuesSectionProps = {
   groupedIssues: GroupedIssueCategory[];
@@ -11,11 +7,9 @@ type GroupedIssuesSectionProps = {
   selectedRuleId: string | null;
   revealedHints: Record<string, boolean>;
   baselineCategoryScores: Record<string, number> | null;
-  onRuleClick: (positions: SonarIssuePosition[]) => void;
   onToggleCategory: (category: string) => void;
   onRuleSelect: (ruleId: string) => void;
   onToggleHint: (ruleId: string) => void;
-  handleCheckMeasurements: () => void;
 };
 
 export function GroupedIssuesSection({
@@ -24,16 +18,14 @@ export function GroupedIssuesSection({
   selectedRuleId,
   revealedHints,
   baselineCategoryScores,
-  onRuleClick,
   onToggleCategory,
   onRuleSelect,
   onToggleHint,
-  handleCheckMeasurements,
 }: GroupedIssuesSectionProps) {
   if (groupedIssues.length === 0) {
     return (
       <div className="statsEmptyState">
-        Click <strong>Check measurements</strong> to load category scores.
+        Click <strong>Submit</strong> to load category scores.
       </div>
     );
   }

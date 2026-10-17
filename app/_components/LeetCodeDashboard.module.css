@@ -16,7 +16,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.8fr) minmax(320px, 1fr);
+  grid-template-columns: minmax(320px, 1fr) minmax(0, 1.8fr);
   gap: 10px;
   padding: 10px;
   flex: 1;
@@ -308,6 +308,14 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
+:global(.statsCategoryHeaderStatic) {
+  cursor: default;
+}
+
+:global(.statsCategoryHeaderStatic:hover) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
 :global(.statsCategoryName) {
   color: #f0f4ff;
 }
@@ -397,6 +405,11 @@
   padding: 0 12px 12px;
 }
 
+:global(.statsCategoryBodyInnerCompact) {
+  gap: 4px;
+  padding-top: 8px;
+}
+
 :global(.statsCategoryMeta) {
   color: #90a0c2;
   font-size: 11px;
@@ -451,6 +464,12 @@
   gap: 8px;
 }
 
+:global(.statsFinalScoreRightColumn) {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
 :global(.statsFinalScoreValue) {
   color: #f2f6ff;
   font-weight: 700;
@@ -472,6 +491,12 @@
 
 :global(.statsFinalScoreDeltasame) {
   color: #b8c2d8;
+}
+
+:global(.statsDeltaLine) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 :global(.statsSubmitFeedback) {

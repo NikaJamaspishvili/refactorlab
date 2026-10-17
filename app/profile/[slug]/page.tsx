@@ -1,72 +1,95 @@
-import { fetchProfileInformation } from "./_serverFunctions/profile";
-import ChooseProfileImage from "./_components/ChooseProfileImage";
-import { fetchLeaderboardInfo } from "@/app/dashboard/_serverFunctions/leaderboard";
 import {
-  difficulties,
   dashboardSections,
   dashboardSectionsMapping,
+  difficulties,
 } from "@/app/common";
-type paramsType = Promise<{ slug: string }>;
+import { fetchLeaderboardInfo } from "@/app/dashboard/_serverFunctions/leaderboard";
+import ChooseProfileImage from "./_components/ChooseProfileImage";
+import { fetchProfileInformation } from "./_serverFunctions/profile";
 
-const page = async ({ params }: { params: paramsType }) => {
-  const newparams = await params;
-  const userId = newparams.slug;
+type Params = Promise<{ slug: string }>;
+type DashboardSection = (typeof dashboardSections)[number];
 
-  const data = await fetchProfileInformation(userId);
+type LeaderboardRow = {
+  scoreSum?: number;
+  solvedCount?: number;
+  tackledCount?: number;
+};
 
-  let finalData: any = {};
+type LeaderboardBucket = {
+  difficulty: string;
+  data: LeaderboardRow[];
+};
 
-  for (const section of dashboardSections) {
-    const leaderBoardInfo = await fetchLeaderboardInfo(section, difficulties);
-
-    let total = 0;
-
-    leaderBoardInfo.response.map((result: any) => {
-      if (section === "HIGHEST_SCORE") {
-        total += result.data[0]?.scoreSum ?? 0;
-      } else if (section === "MOST_PROBLEMS_SOLVED") {
-        total += result.data[0]?.solvedCount ?? 0;
-      } else if (section === "MOST_PROBLEMS_TACKLED") {
-        total += result.data[0]?.tackledCount ?? 0;
-      }
-    });
-
-    finalData[section] = { total: total, array: leaderBoardInfo.response };
+function getSectionValue(section: DashboardSection, row?: LeaderboardRow) {
+  if (!row) {
+    return 0;
   }
 
-  if (!data) return <h1>NO USERS FOUND</h1>;
+  if (section === "HIGHEST_SCORE") {
+    return row.scoreSum ?? 0;
+  }
+
+  if (section === "MOST_PROBLEMS_SOLVED") {
+    return row.solvedCount ?? 0;
+  }
+
+  return row.tackledCount ?? 0;
+}
+
+async function loadSectionData(section: DashboardSection, userId: string) {
+  const leaderboardInfo = await fetchLeaderboardInfo(section, difficulties, userId);
+  const buckets = leaderboardInfo.response as LeaderboardBucket[];
+
+  const total = buckets.reduce((sum, bucket) => {
+    return sum + getSectionValue(section, bucket.data[0]);
+  }, 0);
+
+  return [section, { total, buckets }] as const;
+}
+
+const Page = async ({ params }: { params: Params }) => {
+  const { slug: userId } = await params;
+  const profile = await fetchProfileInformation(userId);
+
+  if (!profile) {
+    return <h1>NO USERS FOUND</h1>;
+  }
+
+  const sectionEntries = await Promise.all(
+    dashboardSections.map((section) => loadSectionData(section, userId)),
+  );
+
+  const sectionData = Object.fromEntries(sectionEntries) as Record<
+    DashboardSection,
+    {
+      total: number;
+      buckets: LeaderboardBucket[];
+    }
+  >;
+
   return (
     <div>
-      <h1>{data.username}</h1>
+      <h1>{profile.username}</h1>
 
-      <ChooseProfileImage image={data.image} userId={userId} />
+      <ChooseProfileImage image={profile.image} userId={userId} />
 
-      {dashboardSections.map((section, index) => {
-        return (
-          <section key={index}>
-            <h1>{dashboardSectionsMapping[section]}</h1>
-            <div style={{ display: "flex", gap: "20px" }}>
-              {finalData[section].array.map((result: any, index2: number) => {
-                return (
-                  <div key={index2}>
-                    <h3>{result.difficulty}</h3>
-
-                    <p>
-                      {result.data[0]?.scoreSum ||
-                        result.data[0]?.tackledCount ||
-                        result.data[0]?.solvedCount ||
-                        0}
-                    </p>
-                  </div>
-                );
-              })}
-              <p>FINAL TOTAL: {finalData[section].total}</p>
-            </div>
-          </section>
-        );
-      })}
+      {dashboardSections.map((section) => (
+        <section key={section}>
+          <h1>{dashboardSectionsMapping[section]}</h1>
+          <div style={{ display: "flex", gap: "20px" }}>
+            {sectionData[section].buckets.map((bucket) => (
+              <div key={`${section}-${bucket.difficulty}`}>
+                <h3>{bucket.difficulty}</h3>
+                <p>{getSectionValue(section, bucket.data[0])}</p>
+              </div>
+            ))}
+            <p>FINAL TOTAL: {sectionData[section].total}</p>
+          </div>
+        </section>
+      ))}
     </div>
   );
 };
 
-export default page;
+export default Page;

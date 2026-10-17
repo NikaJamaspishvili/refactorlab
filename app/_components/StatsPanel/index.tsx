@@ -1,185 +1,286 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import type { MouseEvent } from "react";
+import { GROUPS } from "@/app/api/analyse/static";
 import { analyseCode, mapSonarIssues } from "./api";
 import {
-  buildBaselineDelta,
-  buildExpandedCategories,
-  buildGroupedIssues,
-  calculateCategoryScores,
-  calculateFinalScore,
+  formatAtMostOneDecimal,
+  getPercentChange,
   isTestsFailedPayload,
+  roundToOneDecimal,
   toIssueText,
 } from "./data";
-
 import { FinalScoreCard } from "./components/FinalScoreCard";
-import { GroupedIssuesSection } from "./components/GroupedIssuesSection";
-import { SubmitFeedbackBanner } from "./components/SubmitFeedbackBanner";
 import { TestsFailedSection } from "./components/TestsFailedSection";
 import type {
+  ChangeDirection,
   FatalEntry,
   ParsedTestsFailedPayload,
   SonarIssuePosition,
   SonarIssuesResponse,
-  SubmitFeedback,
 } from "./types";
+
+type PointerCard = {
+  startLine: number;
+  endLine: number;
+  content: string;
+  showNavigation?: boolean;
+};
 
 type StatsPanelProps = {
   code: string;
+  initialScoring: Record<string, number>;
   onRuleClick: (positions: SonarIssuePosition[]) => void;
-  onLlmCodeBlocksFocus: (
-    payload: Array<{
-      startLine: number;
-      endLine: number;
-      content: string;
-    }>,
-  ) => void;
+  onLlmCodeBlocksFocus: (payload: PointerCard[]) => void;
 };
+
+type ScoreDelta = {
+  direction: ChangeDirection;
+  label: string;
+};
+
+const STATIC_GROUP_NAMES = Object.values(GROUPS);
+const ZERO_PERCENT_DELTA: ScoreDelta = {
+  direction: "same",
+  label: `→ ${formatAtMostOneDecimal(0)}%`,
+};
+
+function buildDefaultGroupScores() {
+  return Object.fromEntries(
+    STATIC_GROUP_NAMES.map((group) => [group, 100]),
+  ) as Record<string, number>;
+}
+
+function buildGroupScoresFromInitialScoring(scoring: Record<string, number>) {
+  const scores = buildDefaultGroupScores();
+
+  for (const group of STATIC_GROUP_NAMES) {
+    const deduction = typeof scoring[group] === "number" ? scoring[group] : 0;
+    scores[group] = roundToOneDecimal(Math.max(0, 100 - deduction));
+  }
+
+  return scores;
+}
+
+function buildGroupScoresFromIssues(issues: SonarIssuesResponse) {
+  const scores = buildDefaultGroupScores();
+
+  for (const issue of Object.values(issues)) {
+    const group = issue.category;
+    if (!(group in scores)) {
+      continue;
+    }
+
+    const deduction = issue.score ?? issue.severity;
+    scores[group] = roundToOneDecimal(Math.max(0, scores[group] - deduction));
+  }
+
+  return scores;
+}
+
+function calculateFinalScoreFromGroups(scores: Record<string, number>) {
+  const values = STATIC_GROUP_NAMES.map((group) => scores[group] ?? 100);
+  const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+
+  return roundToOneDecimal(average);
+}
+
+function buildPercentDelta(
+  currentValue: number,
+  comparedValue: number | undefined,
+): ScoreDelta {
+  if (comparedValue === undefined) {
+    return ZERO_PERCENT_DELTA;
+  }
+
+  if (currentValue > comparedValue) {
+    return {
+      direction: "up",
+      label: `↑ ${formatAtMostOneDecimal(getPercentChange(currentValue, comparedValue))}%`,
+    };
+  }
+
+  if (currentValue < comparedValue) {
+    return {
+      direction: "down",
+      label: `↓ ${formatAtMostOneDecimal(getPercentChange(currentValue, comparedValue))}%`,
+    };
+  }
+
+  return ZERO_PERCENT_DELTA;
+}
+
+function readFatalMessage(data: unknown): string {
+  if (!data || typeof data !== "object" || !("fatalMessages" in data)) {
+    return "Fatal error while analysing code.";
+  }
+
+  const fatalMessages = (data as { fatalMessages?: unknown[] }).fatalMessages;
+  if (!Array.isArray(fatalMessages) || fatalMessages.length === 0) {
+    return "Fatal error while analysing code.";
+  }
+
+  return toIssueText(fatalMessages[0] as FatalEntry);
+}
+
+function isFatalResponse(status: number, data: unknown): boolean {
+  if (status !== 400 || !data || typeof data !== "object") {
+    return false;
+  }
+
+  return (
+    "status" in data && (data as { status?: string }).status === "FATAL_MESSAGE"
+  );
+}
 
 export function StatsPanel({
   code,
+  initialScoring,
   onRuleClick,
   onLlmCodeBlocksFocus,
 }: StatsPanelProps) {
-  const [isChecking, setIsChecking] = useState(false);
-  const [expandedCategories, setExpandedCategories] = useState<
-    Record<string, boolean>
-  >({});
-  const [analysedIssues, setAnalysedIssues] = useState<SonarIssuesResponse>({});
-  const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
-  const [baselineFinalScore, setBaselineFinalScore] = useState<number | null>(
-    null,
+  const baselineGroupScores = useMemo(
+    () => buildGroupScoresFromInitialScoring(initialScoring),
+    [initialScoring],
   );
-  const [baselineCategoryScores, setBaselineCategoryScores] = useState<Record<
+
+  const [isChecking, setIsChecking] = useState(false);
+  const [showAIHelpBtn, setShowAIHelpBtn] = useState(true);
+
+  const [analysedIssues, setAnalysedIssues] = useState<SonarIssuesResponse>({});
+  const [groupScores, setGroupScores] =
+    useState<Record<string, number>>(baselineGroupScores);
+  const [initialGroupScores] =
+    useState<Record<string, number>>(baselineGroupScores);
+  const [previousGroupScores, setPreviousGroupScores] = useState<Record<
     string,
     number
   > | null>(null);
-  const [previousFinalScore, setPreviousFinalScore] = useState<number | null>(
-    null,
-  );
-  const [submitFeedback, setSubmitFeedback] = useState<SubmitFeedback | null>(
-    null,
-  );
-  const [revealedHints, setRevealedHints] = useState<Record<string, boolean>>(
-    {},
-  );
+
+  const [previousFinalScore, setPreviousFinalScore] = useState<number>();
+  const [lastCheckedCode, setLastCheckedCode] = useState<string | null>(null);
+
   const [fatalMessage, setFatalMessage] = useState("");
   const [testsFailedPayload, setTestsFailedPayload] =
     useState<ParsedTestsFailedPayload | null>(null);
   const [isFailedTestsOpen, setIsFailedTestsOpen] = useState(false);
 
-  const groupedIssues = useMemo(
-    () => buildGroupedIssues(analysedIssues),
-    [analysedIssues],
-  );
-
   const finalScore = useMemo(
-    () => calculateFinalScore(analysedIssues),
-    [analysedIssues],
+    () => calculateFinalScoreFromGroups(groupScores),
+    [groupScores],
   );
 
-  const [showAIHelpBtn, setShowAIHelpBtn] = useState(true);
-
-  const baselineDelta = useMemo(
-    () => buildBaselineDelta(finalScore, baselineFinalScore),
-    [finalScore, baselineFinalScore],
+  const initialFinalScore = useMemo(
+    () => calculateFinalScoreFromGroups(initialGroupScores),
+    [initialGroupScores],
   );
 
-  const resetToNeutralState = () => {
-    setAnalysedIssues({});
-    setSelectedRuleId(null);
-    setRevealedHints({});
+  const initialFinalDelta = useMemo(
+    () => buildPercentDelta(finalScore, initialFinalScore),
+    [finalScore, initialFinalScore],
+  );
+
+  const previousFinalDelta = useMemo(
+    () => buildPercentDelta(finalScore, previousFinalScore),
+    [finalScore, previousFinalScore],
+  );
+
+  const clearHighlights = () => {
     onRuleClick([]);
     onLlmCodeBlocksFocus([]);
   };
 
-  useEffect(() => {
-    handleCheckMeasurements();
-  }, []);
+  const handleCheckMeasurements = async (isHintCheck = false) => {
+    const isCodeUnchanged =
+      lastCheckedCode !== null && lastCheckedCode === code;
+    if (isCodeUnchanged) {
+      return analysedIssues;
+    }
 
-  const handleCheckMeasurements = async (isHint?: boolean) => {
     setIsChecking(true);
+
     try {
       const { status, data } = await analyseCode(code);
+      setLastCheckedCode(code);
 
-      if (
-        status === 400 &&
-        data &&
-        typeof data === "object" &&
-        "status" in data
-      ) {
-        const maybeStatus = (data as { status?: string }).status;
-
-        if (maybeStatus === "FATAL_MESSAGE") {
-          if (
-            "fatalMessages" in data &&
-            Array.isArray(
-              (data as { fatalMessages?: unknown[] }).fatalMessages,
-            ) &&
-            (data as { fatalMessages?: unknown[] }).fatalMessages!.length > 0
-          ) {
-            setFatalMessage(
-              toIssueText(
-                (data as { fatalMessages: FatalEntry[] }).fatalMessages[0],
-              ),
-            );
-          } else {
-            setFatalMessage("Fatal error while analysing code.");
-          }
-
-          resetToNeutralState();
-          setTestsFailedPayload(null);
-          setIsFailedTestsOpen(false);
-          return;
-        }
+      if (isFatalResponse(status, data)) {
+        setFatalMessage(readFatalMessage(data));
+        setTestsFailedPayload(null);
+        setIsFailedTestsOpen(false);
+        clearHighlights();
+        return null;
       }
 
       if (isTestsFailedPayload(data)) {
         setShowAIHelpBtn(true);
         setFatalMessage("");
-        resetToNeutralState();
         setTestsFailedPayload({
           testsResult: data.testsResult ?? {},
           affectedLines: data.affectedLines ?? [],
         });
         setIsFailedTestsOpen(false);
-        return;
+        clearHighlights();
+        return null;
       }
 
       setFatalMessage("");
       setTestsFailedPayload(null);
 
       const mappedIssues = mapSonarIssues(data);
-      const nextFinalScore = calculateFinalScore(mappedIssues);
-      const nextCategoryScores = calculateCategoryScores(mappedIssues);
+      const nextGroupScores = buildGroupScoresFromIssues(mappedIssues);
 
-      if (nextFinalScore !== null && baselineFinalScore === null) {
-        setBaselineFinalScore(nextFinalScore);
-      }
+      setPreviousGroupScores(groupScores);
+      setPreviousFinalScore(finalScore);
 
-      if (baselineCategoryScores === null) {
-        setBaselineCategoryScores(nextCategoryScores);
-      }
-
-      // const nextFeedback = buildSubmitFeedback(
-      //   nextFinalScore,
-      //   previousFinalScore,
-      // );
-      // if (nextFeedback) {
-      //   setSubmitFeedback(nextFeedback);
-      // }
-
-      console.log("mappedIssues: ", mappedIssues);
-      setPreviousFinalScore(nextFinalScore);
+      setGroupScores(nextGroupScores);
       setAnalysedIssues(mappedIssues);
-      setSelectedRuleId(null);
-      setRevealedHints({});
-      if (!isHint) onRuleClick([]);
-      setExpandedCategories(buildExpandedCategories(mappedIssues));
+
+      if (!isHintCheck) {
+        onRuleClick([]);
+      }
+
+      return mappedIssues;
     } catch (error) {
       console.error("Failed to check measurements", error);
+      return null;
     } finally {
       setIsChecking(false);
+    }
+  };
+
+  const focusFirstIssueHint = (issues: SonarIssuesResponse) => {
+    const firstIssue = Object.values(issues)[0];
+    const firstPosition = firstIssue?.positions?.[0];
+
+    if (!firstIssue || !firstPosition) {
+      alert("ALL PROBLEMS HAVE BEEN SOLVED");
+      return;
+    }
+
+    onLlmCodeBlocksFocus([
+      {
+        startLine: firstPosition.line,
+        endLine: firstPosition.endline ?? firstPosition.line,
+        content: firstIssue.message,
+        showNavigation: false,
+      },
+    ]);
+  };
+
+  const handleRecheckAndHint = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+
+    const isCodeUnchanged =
+      lastCheckedCode !== null && lastCheckedCode === code;
+    if (isCodeUnchanged) {
+      focusFirstIssueHint(analysedIssues);
+      return;
+    }
+
+    const mappedIssues = await handleCheckMeasurements(true);
+    if (mappedIssues) {
+      focusFirstIssueHint(mappedIssues);
     }
   };
 
@@ -187,13 +288,6 @@ export function StatsPanel({
     <section className="panelShell">
       <div className="panelTitle">Stats</div>
       <div className="statsContent">
-        {submitFeedback ? (
-          <SubmitFeedbackBanner
-            submitFeedback={submitFeedback}
-            onDismiss={() => setSubmitFeedback(null)}
-          />
-        ) : null}
-
         {fatalMessage ? (
           <>
             <div className="statsFatalTitle">Fatal</div>
@@ -213,68 +307,74 @@ export function StatsPanel({
           <>
             <FinalScoreCard
               finalScore={finalScore}
-              baselineDelta={baselineDelta}
+              initialDelta={initialFinalDelta}
+              previousDelta={previousFinalDelta}
             />
-            <GroupedIssuesSection
-              handleCheckMeasurements={handleCheckMeasurements}
-              groupedIssues={groupedIssues}
-              expandedCategories={expandedCategories}
-              selectedRuleId={selectedRuleId}
-              revealedHints={revealedHints}
-              baselineCategoryScores={baselineCategoryScores}
-              onRuleClick={onRuleClick}
-              onToggleCategory={(category) => {
-                setExpandedCategories((previous) => ({
-                  ...previous,
-                  [category]: !previous[category],
-                }));
-              }}
-              onRuleSelect={setSelectedRuleId}
-              onToggleHint={(ruleId) => {
-                setRevealedHints((previous) => ({
-                  ...previous,
-                  [ruleId]: !previous[ruleId],
-                }));
-              }}
-            />
+
+            <div className="statsGroupedIssues">
+              {STATIC_GROUP_NAMES.map((group) => {
+                const score = groupScores[group] ?? 100;
+                const initialDelta = buildPercentDelta(
+                  score,
+                  initialGroupScores[group],
+                );
+                const previousDelta = buildPercentDelta(
+                  score,
+                  previousGroupScores?.[group],
+                );
+
+                return (
+                  <div key={group} className="statsCategoryCard">
+                    <div className="statsCategoryHeader statsCategoryHeaderStatic">
+                      <span className="statsCategoryName">{group}</span>
+                      <span className="statsCategoryHeaderRight">
+                        <span className="statsCategoryScore">
+                          {formatAtMostOneDecimal(score)}/100
+                        </span>
+                      </span>
+                    </div>
+
+                    <div className="statsCategoryBody statsCategoryBodyOpen">
+                      <div className="statsCategoryBodyInner statsCategoryBodyInnerCompact">
+                        <div className="statsDeltaLine">
+                          <span className="statsCategoryMeta">init</span>
+                          <span
+                            className={`statsFinalScoreDelta statsFinalScoreDelta${initialDelta.direction}`}
+                          >
+                            {initialDelta.label}
+                          </span>
+                        </div>
+                        <div className="statsDeltaLine">
+                          <span className="statsCategoryMeta">prev</span>
+                          <span
+                            className={`statsFinalScoreDelta statsFinalScoreDelta${previousDelta.direction}`}
+                          >
+                            {previousDelta.label}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </>
         )}
 
         <button
           className="statsActionButton"
           type="button"
-          onClick={() => handleCheckMeasurements}
+          onClick={() => void handleCheckMeasurements()}
           disabled={isChecking}
         >
-          {isChecking ? "Checking..." : "Check measurements"}
+          {isChecking ? "Submitting..." : "Submit"}
         </button>
 
-        {!testsFailedPayload && (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              handleCheckMeasurements(true);
-              if (groupedIssues.length > 0) {
-                console.log(groupedIssues);
-                const startLine = groupedIssues[0].issues[0].positions[0].line;
-                const endLine = groupedIssues[0].issues[0].positions[0].endline;
-                const explanaition = groupedIssues[0].issues[0].message;
-                onLlmCodeBlocksFocus([
-                  {
-                    startLine: startLine,
-                    endLine: endLine || 0,
-                    content: explanaition,
-                  },
-                ]);
-              } else {
-                alert("ALL PROBLEMS HAVE BEEN SOLVED");
-              }
-            }}
-          >
+        {!testsFailedPayload ? (
+          <button type="button" onClick={handleRecheckAndHint}>
             Recheck & Hint
           </button>
-        )}
+        ) : null}
       </div>
     </section>
   );

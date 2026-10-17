@@ -3,6 +3,8 @@ export const STATUS = {
   REJECTED: "REJECTED",
 };
 
+export const VALID_ACCEPTED_SCORE = 85;
+
 export const GROUPS = {
   LOGIC: "Program Logic & Bugs",
   MAINTAINABILITY: "Maintainability & Structure",

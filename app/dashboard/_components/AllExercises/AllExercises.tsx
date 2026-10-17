@@ -1,39 +1,66 @@
 import { useState } from "react";
 import { FetchAllExercisesData } from "../../_serverFunctions/allexercises";
-import {
+import type {
+  AllExercisesItem,
+  AllExercisesFilter,
   DIFFICULTY,
   PROBLEM_STATUS,
-  AllExercisesItem,
   title,
 } from "../../types/types";
 
-function AllExercises({
-  userId,
-  initialData,
-}: {
+type ExerciseStatus = "FIRST VIEW" | "SOLVED" | "IN PROGRESS";
+
+type AllExercisesProps = {
   userId?: string;
   initialData: AllExercisesItem[];
-}) {
+};
+
+const difficultyColors: Record<string, string> = {
+  HARD: "red",
+  NORMAL: "gray",
+  EASY: "green",
+};
+
+const statusColors: Record<ExerciseStatus, string> = {
+  "FIRST VIEW": "gray",
+  "IN PROGRESS": "green",
+  SOLVED: "red",
+};
+
+function getExerciseStatus(score: number | null | undefined): ExerciseStatus {
+  if (!score) {
+    return "FIRST VIEW";
+  }
+
+  if (score === 100) {
+    return "SOLVED";
+  }
+
+  return "IN PROGRESS";
+}
+
+function buildFilters(formData: FormData): AllExercisesFilter {
+  const difficulty = formData.get("DIFFICULTY") as DIFFICULTY;
+  const exerciseTitle = formData.get("EXERCISE_TITLE") as title;
+  const problemStatus = formData.get("PROBLEM_STATUS") as PROBLEM_STATUS;
+
+  return {
+    DIFFICULTY: difficulty,
+    TITLE: exerciseTitle.length > 0 ? exerciseTitle : "",
+    PROBLEM_STATUS: problemStatus,
+  };
+}
+
+function AllExercises({ userId, initialData }: AllExercisesProps) {
   const [exercises, setExercises] = useState<AllExercisesItem[]>(initialData);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-    const formData = new FormData(e.currentTarget);
+    const filters = buildFilters(new FormData(event.currentTarget));
+    const data = await FetchAllExercisesData(filters, userId);
 
-    const difficulty = formData.get("DIFFICULTY") as DIFFICULTY;
-    const title = formData.get("EXERCISE_TITLE") as title;
-    const problemStatus = formData.get("PROBLEM_STATUS") as PROBLEM_STATUS;
-
-    const req = {
-      DIFFICULTY: difficulty,
-      TITLE: title.length > 0 ? title : "",
-      PROBLEM_STATUS: problemStatus,
-    };
-
-    const data = await FetchAllExercisesData(req, userId);
-
-    setExercises([...data]);
+    setExercises(data);
   };
 
   return (
@@ -60,40 +87,17 @@ function AllExercises({
       </form>
 
       <section>
-        {exercises.map((result, index) => {
-          const Status = !result.score
-            ? "FIRST VIEW"
-            : result.score === 100
-              ? "SOLVED"
-              : result.score < 100 && "IN PROGRESS";
+        {exercises.map((exercise) => {
+          const status = getExerciseStatus(exercise.score);
+
           return (
-            <div key={index}>
-              <h1>{result.title}</h1>
-              <p>{result.description}</p>
-              <span
-                style={{
-                  color:
-                    result.difficulty === "HARD"
-                      ? "red"
-                      : result.difficulty === "NORMAL"
-                        ? "gray"
-                        : "green",
-                }}
-              >
-                {result.difficulty}
+            <div key={exercise.exerciseId}>
+              <h1>{exercise.title}</h1>
+              <p>{exercise.description}</p>
+              <span style={{ color: difficultyColors[exercise.difficulty] ?? "black" }}>
+                {exercise.difficulty}
               </span>
-              <span
-                style={{
-                  color:
-                    Status === "FIRST VIEW"
-                      ? "gray"
-                      : Status === "IN PROGRESS"
-                        ? "green"
-                        : "red",
-                }}
-              >
-                {Status}
-              </span>
+              <span style={{ color: statusColors[status] }}>{status}</span>
             </div>
           );
         })}

@@ -31,7 +31,7 @@ export async function eslint(filepath) {
 
   const [result] = await eslint.lintFiles([filepath]);
 
-  let object = {};
+  let object = { finalScore: 0 };
 
   // const fatalIssue = result.messages.filter((item) => item.fatal);
   // if (fatalIssue.length > 0) return fatalIssue;
@@ -42,6 +42,7 @@ export async function eslint(filepath) {
     if (message.ruleId === "sonarjs/cognitive-complexity") {
       score = extractCognitiveComplexity(message);
     }
+    object.finalScore += score;
 
     if (!sonarRuleDictionary[message.ruleId]) return;
 

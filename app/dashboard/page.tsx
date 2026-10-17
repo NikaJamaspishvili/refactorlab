@@ -1,7 +1,7 @@
 import Page from "./_components/Page";
 import { auth } from "@/auth";
 import { FetchAllExercisesData } from "./_serverFunctions/allexercises";
-const page = async () => {
+const PageContainer = async () => {
   const session = await auth(); // v5: await auth()
 
   const exercisesData = await FetchAllExercisesData({
@@ -10,8 +10,9 @@ const page = async () => {
     PROBLEM_STATUS: "ALL",
   });
 
-  const userSession = session?.user as { userId: string };
-  return <Page exerciseData={exercisesData} userId={userSession.userId} />;
+  const userSession = session?.user as { userId?: string } | undefined;
+
+  return <Page exerciseData={exercisesData} userId={userSession?.userId} />;
 };
 
-export default page;
+export default PageContainer;

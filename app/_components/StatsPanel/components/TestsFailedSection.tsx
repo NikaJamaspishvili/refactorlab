@@ -1,24 +1,61 @@
+import { useState, useTransition } from "react";
+import type { Dispatch, SetStateAction } from "react";
+import { requestLlmHelp } from "../api";
 import { getFailedSummary, toEditorPositionsFromAffectedLines } from "../data";
 import type { ParsedTestsFailedPayload, SonarIssuePosition } from "../types";
-import { requestLlmHelp } from "../api";
 import { recordsToCsv } from "../../../_tools/data_formatters";
-import { useState, useTransition } from "react";
+
+type PointerCard = {
+  startLine: number;
+  endLine: number;
+  content: string;
+};
+
+type CodeBlock = {
+  start_line?: number;
+  end_line?: number;
+  explanation?: string;
+};
 
 type TestsFailedSectionProps = {
   payload: ParsedTestsFailedPayload;
   isOpen: boolean;
   onToggle: () => void;
   onRuleClick: (positions: SonarIssuePosition[]) => void;
-  onLlmCodeBlocksFocus: (
-    payload: Array<{
-      startLine: number;
-      endLine: number;
-      content: string;
-    }>,
-  ) => void;
+  onLlmCodeBlocksFocus: (payload: PointerCard[]) => void;
   showAIHelpBtn: boolean;
-  setShowAIHelpBtn: any;
+  setShowAIHelpBtn: Dispatch<SetStateAction<boolean>>;
 };
+
+function toPosition(block: CodeBlock): SonarIssuePosition | null {
+  if (typeof block.start_line !== "number" || typeof block.end_line !== "number") {
+    return null;
+  }
+
+  const startLine = Math.max(1, block.start_line);
+  const endLine = Math.max(startLine, block.end_line);
+
+  return {
+    line: startLine,
+    column: 1,
+    endline: endLine,
+    endColumn: 1,
+  };
+}
+
+function toPointerCard(block: CodeBlock): PointerCard | null {
+  const position = toPosition(block);
+
+  if (!position || typeof block.explanation !== "string" || block.explanation.length === 0) {
+    return null;
+  }
+
+  return {
+    startLine: position.line,
+    endLine: position.endline ?? position.line,
+    content: block.explanation,
+  };
+}
 
 export function TestsFailedSection({
   payload,
@@ -29,91 +66,75 @@ export function TestsFailedSection({
   showAIHelpBtn,
   setShowAIHelpBtn,
 }: TestsFailedSectionProps) {
-  const [AIstatus, setAIStatus] = useState<"idle" | "hint" | "problem">("idle");
-  const [HintSummary, setHintSummary] = useState("");
-  const [ProblemSummary, setProblemSummary] = useState("");
-  const [CodeBlocks, setCodeBlocks] = useState<
-    Array<{ start_line?: number; end_line?: number; explanation?: string }>
-  >([]);
+  const [aiStatus, setAiStatus] = useState<"idle" | "hint" | "problem">("idle");
+  const [hintSummary, setHintSummary] = useState("");
+  const [problemSummary, setProblemSummary] = useState("");
+  const [codeBlocks, setCodeBlocks] = useState<CodeBlock[]>([]);
   const [codeBlocksHighlighted, setCodeBlocksHighlighted] = useState(false);
-  const [loading, startTransition] = useTransition();
+  const [isLoading, startTransition] = useTransition();
 
-  const helpLeonor = () => {
+  const handleAskForHelp = () => {
     startTransition(async () => {
-      const failedTests = payload.testsResult.failedTests;
-      const csvAffectedLines = recordsToCsv(payload.affectedLines);
-
       const response = await requestLlmHelp({
         STATUS: "FAILED_TEST_HELP",
-        failedTests,
-        csvAffectedLines,
+        failedTests: payload.testsResult.failedTests,
+        csvAffectedLines: recordsToCsv(payload.affectedLines),
         exerciseId: 2,
       });
 
-      console.log(response);
-
-      if (response.analysis.summary)
+      if (response?.analysis?.summary) {
         setProblemSummary(response.analysis.summary);
-      if (response.final_hint) setHintSummary(response.final_hint);
-      if (response.analysis.code_blocks.length > 0) {
-        setCodeBlocks(response.analysis.code_blocks);
       }
+
+      if (response?.final_hint) {
+        setHintSummary(response.final_hint);
+      }
+
+      const nextCodeBlocks = Array.isArray(response?.analysis?.code_blocks)
+        ? (response.analysis.code_blocks as CodeBlock[])
+        : [];
+
+      if (nextCodeBlocks.length > 0) {
+        setCodeBlocks(nextCodeBlocks);
+      }
+
       setShowAIHelpBtn(false);
-      setAIStatus("hint");
+      setAiStatus("hint");
     });
   };
 
-  function showProblem() {
-    const positions: SonarIssuePosition[] = CodeBlocks.filter((block) => {
-      return (
-        typeof block.start_line === "number" &&
-        typeof block.end_line === "number"
-      );
-    }).map((block) => {
-      const startLine = Math.max(1, block.start_line as number);
-      const endLine = Math.max(startLine, block.end_line as number);
+  const handleShowProblem = () => {
+    const positions = codeBlocks
+      .map(toPosition)
+      .filter((position): position is SonarIssuePosition => position !== null);
 
-      return {
-        line: startLine,
-        column: 1,
-        endline: endLine,
-        endColumn: 1,
-      };
-    });
+    const pointerCards = codeBlocks
+      .map(toPointerCard)
+      .filter((card): card is PointerCard => card !== null);
 
     if (positions.length > 0) {
       onRuleClick(positions);
     }
 
-    const pointerCards = CodeBlocks.filter(
-      (block) =>
-        typeof block.start_line === "number" &&
-        typeof block.end_line === "number" &&
-        typeof block.explanation === "string" &&
-        block.explanation.length > 0,
-    ).map((block) => {
-      const startLine = Math.max(1, block.start_line as number);
-      const endLine = Math.max(startLine, block.end_line as number);
-
-      return {
-        startLine,
-        endLine,
-        content: block.explanation as string,
-      };
-    });
-
     onLlmCodeBlocksFocus(pointerCards);
+    setAiStatus("problem");
+  };
 
-    setAIStatus("problem");
-  }
+  const handleToggleAffectedBlocks = () => {
+    if (codeBlocksHighlighted) {
+      onRuleClick([]);
+      setCodeBlocksHighlighted(false);
+      return;
+    }
+
+    const positions = toEditorPositionsFromAffectedLines(payload.affectedLines);
+    onRuleClick(positions);
+    setCodeBlocksHighlighted(true);
+  };
 
   return (
     <div className="statsTestsFailedWrapper">
-      <button
-        className="statsTestsFailedHeader"
-        type="button"
-        onClick={onToggle}
-      >
+      <button className="statsTestsFailedHeader" type="button" onClick={onToggle}>
         <span>
           {getFailedSummary(
             payload.testsResult.summary,
@@ -144,8 +165,7 @@ export function TestsFailedSection({
                 expected output: {JSON.stringify(failedTest.expected)}
               </div>
               <div className="statsIssueDescription" style={{ color: "red" }}>
-                actual output:{" "}
-                {JSON.stringify(failedTest.actual) ?? "No message"}
+                actual output: {JSON.stringify(failedTest.actual) ?? "No message"}
               </div>
             </div>
           ))}
@@ -156,43 +176,36 @@ export function TestsFailedSection({
         <button
           className="statsActionButton"
           type="button"
-          onClick={() => {
-            if (codeBlocksHighlighted) {
-              onRuleClick([]);
-              setCodeBlocksHighlighted(false);
-            } else {
-              const positions = toEditorPositionsFromAffectedLines(
-                payload.affectedLines,
-              );
-              onRuleClick(positions);
-              setCodeBlocksHighlighted(true);
-            }
-          }}
+          onClick={handleToggleAffectedBlocks}
         >
-          {codeBlocksHighlighted ? "X" : "Highlight possible code blocks"}
+          {codeBlocksHighlighted ? "Clear highlights" : "Highlight possible code blocks"}
         </button>
       ) : (
-        <p>No Affected blocks detected </p>
-      )}
-      {showAIHelpBtn && (
-        <button onClick={helpLeonor}>
-          {loading ? "Thinking..." : "Help Leonor 👾💻"}
-        </button>
+        <p>No affected blocks detected.</p>
       )}
 
-      {AIstatus == "hint" && HintSummary.length > 0 && (
+      {showAIHelpBtn ? (
+        <button type="button" onClick={handleAskForHelp}>
+          {isLoading ? "Thinking..." : "Help Leonor 👾💻"}
+        </button>
+      ) : null}
+
+      {aiStatus === "hint" && hintSummary.length > 0 ? (
         <div>
           <h1>Hint</h1>
-          <p>{HintSummary}</p>
-          <button onClick={showProblem}>Show Problem</button>
+          <p>{hintSummary}</p>
+          <button type="button" onClick={handleShowProblem}>
+            Show Problem
+          </button>
         </div>
-      )}
-      {AIstatus == "hint" && HintSummary.length > 0 && (
+      ) : null}
+
+      {aiStatus === "problem" && problemSummary.length > 0 ? (
         <div>
           <h1>Problem Summary</h1>
-          <p>{ProblemSummary}</p>
+          <p>{problemSummary}</p>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

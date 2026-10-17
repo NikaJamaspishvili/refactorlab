@@ -19,6 +19,7 @@ export type IdeHighlightAndCardInput = {
   startColumn?: number;
   endColumn?: number;
   footer?: ReactNode;
+  onClose?: () => void;
 };
 
 export type IdeRenderContentAndHighlightTool = {
@@ -44,6 +45,7 @@ export function createIdeRenderContentAndHighlightTool(
   let widgetMaxBodyHeight: number | undefined;
   let widgetContent = "";
   let widgetFooter: ReactNode | undefined;
+  let widgetOnClose: (() => void) | undefined;
   let scrollDisposable: { dispose: () => void } | null = null;
 
   const cardGapInLines = 1;
@@ -79,6 +81,7 @@ export function createIdeRenderContentAndHighlightTool(
     widgetRange = null;
     widgetContent = "";
     widgetFooter = undefined;
+    widgetOnClose = undefined;
     widgetMaxBodyHeight = undefined;
   };
 
@@ -196,6 +199,7 @@ export function createIdeRenderContentAndHighlightTool(
       <IDELinePointerCard
         content={widgetContent}
         footer={widgetFooter}
+        onClose={widgetOnClose}
         pointerSide={widgetPlacement === "above" ? "bottom" : "top"}
         maxBodyHeight={widgetMaxBodyHeight}
       />,
@@ -229,6 +233,7 @@ export function createIdeRenderContentAndHighlightTool(
     startColumn,
     endColumn,
     footer,
+    onClose,
   }: IdeHighlightAndCardInput) => {
     clearDecorations();
 
@@ -292,6 +297,7 @@ export function createIdeRenderContentAndHighlightTool(
 
     widgetContent = content;
     widgetFooter = footer;
+    widgetOnClose = onClose;
 
     const fit = selectPlacement(normalizedStartLine);
     widgetPlacement = fit.placement;

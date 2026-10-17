@@ -1,6 +1,6 @@
-"use server";
 import AuthButtons from "../_components/auth-buttons";
-async function page() {
+
+function Page() {
   return (
     <div>
       <AuthButtons />
@@ -8,4 +8,4 @@ async function page() {
   );
 }
 
-export default page;
+export default Page;

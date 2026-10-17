@@ -25,20 +25,32 @@ type LlmPointerCardPayload = {
   startLine: number;
   endLine: number;
   content: string;
+  showNavigation?: boolean;
 };
 
 export function LeetCodeDashboard() {
-  const [code, setCode] = useState(Exercises["2"].code);
+  const exercise = Exercises["2"];
+  const [code, setCode] = useState(exercise.code);
   const [highlightedPositions, setHighlightedPositions] = useState<
     HighlightPosition[]
   >([]);
-  const [activeHint, setActiveHint] = useState<LlmHint | null>(null);
-  const [llmPointerCards, setLlmPointerCards] = useState<LlmPointerCardPayload[]>([]);
+  const [activeHint] = useState<LlmHint | null>(null);
+  const [llmPointerCards, setLlmPointerCards] = useState<
+    LlmPointerCardPayload[]
+  >([]);
 
   return (
     <main className={styles.page}>
       <header className={styles.header}>LeetCode-Style Dashboard</header>
       <section className={styles.grid}>
+        <div className={`${styles.panel} ${styles.textPanel}`}>
+          <StatsPanel
+            code={code}
+            initialScoring={exercise.scoring}
+            onRuleClick={setHighlightedPositions}
+            onLlmCodeBlocksFocus={setLlmPointerCards}
+          />
+        </div>
         <div className={`${styles.panel} ${styles.editorPanel}`}>
           <CodeEditorPanel
             code={code}
@@ -46,12 +58,6 @@ export function LeetCodeDashboard() {
             highlightedPositions={highlightedPositions}
             activeHint={activeHint}
             llmPointerCards={llmPointerCards}
-          />
-        </div>
-        <div className={`${styles.panel} ${styles.textPanel}`}>
-          <StatsPanel
-            code={code}
-            onRuleClick={setHighlightedPositions}
             onLlmCodeBlocksFocus={setLlmPointerCards}
           />
         </div>

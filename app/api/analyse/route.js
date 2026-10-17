@@ -6,8 +6,15 @@ import fs from "node:fs/promises";
 import { RunTests } from "./runtests";
 import EXERCISES from "@/exercises.json";
 import { getOutputAffectingLines } from "../../_tools/output_affecting_lines";
+import { submissionInformation } from "./DbLogic";
+
+import { auth } from "@/auth";
 
 export async function POST(request) {
+  const session = await auth();
+  const userSession = session?.user;
+  const userId = userSession.userId;
+
   const { code, exerciseId } = await request.json();
 
   const exerciseContext = EXERCISES[exerciseId];
@@ -50,6 +57,14 @@ export async function POST(request) {
     const targetFile = path.resolve(__dirname, tmpFilePath);
     // step 2: structural code evaluation
     const eslint_res = await eslint(targetFile);
+
+    const STATUS = await submissionInformation(
+      userId,
+      Number(exerciseId),
+      100 - eslint_res.finalScore,
+    );
+
+    eslint_res.submissionStatus = STATUS;
 
     return Response.json(eslint_res, { status: 200 });
   } catch (error) {

@@ -5,6 +5,7 @@ type IDELinePointerCardProps = {
   title?: string;
   avatarSrc?: string;
   footer?: ReactNode;
+  onClose?: () => void;
   pointerSide?: "top" | "bottom";
   maxBodyHeight?: number;
 };
@@ -14,6 +15,7 @@ function IDELinePointerCard({
   title = "Code Hint",
   avatarSrc = "HoodieGuy.jpeg",
   footer,
+  onClose,
   pointerSide = "bottom",
   maxBodyHeight,
 }: IDELinePointerCardProps) {
@@ -92,6 +94,25 @@ function IDELinePointerCard({
         >
           {title}
         </div>
+        {onClose ? (
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              marginLeft: "auto",
+              border: "1px solid rgba(148, 163, 184, 0.3)",
+              background: "transparent",
+              color: "#f8fafc",
+              borderRadius: "6px",
+              width: "22px",
+              height: "22px",
+              cursor: "pointer",
+              lineHeight: 1,
+            }}
+          >
+            X
+          </button>
+        ) : null}
       </header>
 
       <div

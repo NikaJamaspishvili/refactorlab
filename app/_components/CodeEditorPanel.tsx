@@ -15,6 +15,7 @@ type LlmPointerCardPayload = {
   startLine: number;
   endLine: number;
   content: string;
+  showNavigation?: boolean;
 };
 
 type CodeEditorPanelProps = {
@@ -29,6 +30,7 @@ type CodeEditorPanelProps = {
     correct_code: string;
   } | null;
   llmPointerCards: LlmPointerCardPayload[];
+  onLlmCodeBlocksFocus: (payload: LlmPointerCardPayload[]) => void;
 };
 
 function replaceLinesInCode(
@@ -56,6 +58,7 @@ export function CodeEditorPanel({
   highlightedPositions,
   activeHint,
   llmPointerCards,
+  onLlmCodeBlocksFocus,
 }: CodeEditorPanelProps) {
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
@@ -160,30 +163,35 @@ export function CodeEditorPanel({
       content: activeCard.content,
       footer: (
         <>
-          <button
-            type="button"
-            disabled={activeCardIndex === 0}
-            onClick={() =>
-              setActiveCardIndex((previous) => Math.max(0, previous - 1))
-            }
-          >
-            Previous
-          </button>
-          <button
-            type="button"
-            disabled={activeCardIndex >= llmPointerCards.length - 1}
-            onClick={() =>
-              setActiveCardIndex((previous) =>
-                Math.min(llmPointerCards.length - 1, previous + 1),
-              )
-            }
-          >
-            Next
-          </button>
+          {activeCard.showNavigation !== false ? (
+            <>
+              <button
+                type="button"
+                disabled={activeCardIndex === 0}
+                onClick={() =>
+                  setActiveCardIndex((previous) => Math.max(0, previous - 1))
+                }
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                disabled={activeCardIndex >= llmPointerCards.length - 1}
+                onClick={() =>
+                  setActiveCardIndex((previous) =>
+                    Math.min(llmPointerCards.length - 1, previous + 1),
+                  )
+                }
+              >
+                Next
+              </button>
+            </>
+          ) : null}
         </>
       ),
+      onClose: () => onLlmCodeBlocksFocus([]),
     });
-  }, [activeCardIndex, llmPointerCards]);
+  }, [activeCardIndex, llmPointerCards, onLlmCodeBlocksFocus]);
 
   useEffect(() => {
     return () => {
