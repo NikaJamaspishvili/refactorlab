@@ -13,3 +13,6 @@ export const dashboardSectionsMapping = {
 };
 
 export const difficulties: informationType = ["HARD", "NORMAL", "EASY"];
+
+export const HINT_POINTS = 5;
+export const MAX_HINT_COUNT = 2;
